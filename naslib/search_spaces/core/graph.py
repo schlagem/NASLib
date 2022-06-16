@@ -102,7 +102,7 @@ class Graph(torch.nn.Module, nx.DiGraph):
             >>> my_graph_42_classes = MyGraph()
 
         """
-        # super().__init__()
+        super().__init__()
         nx.DiGraph.__init__(self)
         torch.nn.Module.__init__(self)
 
