@@ -18,7 +18,7 @@ class OFABlock(torch.nn.Module):
     def __init__(self, in_channel, kernel_size=[3, 5, 7], depth=[2, 3, 4], expand_ratio=[3, 4, 6]):
         super().__init__()
         # the actual parameters of the OFABlock for every layer with #layers = self.depth
-        self.kernel_sizes = [max(kernel_size) for i in range(4)]
+        self.kernel_size_list = [max(kernel_size) for i in range(4)]
         self.depth = max(depth)
         self.expand_ratio_list = [max(expand_ratio) for i in range(4)]
 
@@ -39,10 +39,10 @@ class OFABlock(torch.nn.Module):
         # conv layers
         # Do we need padding to keep the dimensions with different kernel sizes??
         # Include the strides
-        self.layer1 = torch.nn.Conv2d(in_channel, self.channel_size_l0, kernel_size[0])
-        self.layer2 = torch.nn.Conv2d(self.channel_size_l0, self.channel_size_l1, kernel_size[1])
-        self.layer3 = torch.nn.Conv2d(self.channel_size_l1, self.channel_size_l2, kernel_size[2])
-        self.layer4 = torch.nn.Conv2d(self.channel_size_l2, self.channel_size_l3, kernel_size[3])
+        self.layer1 = torch.nn.Conv2d(in_channel, self.channel_size_l0, self.kernel_size_list[0])
+        self.layer2 = torch.nn.Conv2d(self.channel_size_l0, self.channel_size_l1, self.kernel_size_list[1])
+        self.layer3 = torch.nn.Conv2d(self.channel_size_l1, self.channel_size_l2, self.kernel_size_list[2])
+        self.layer4 = torch.nn.Conv2d(self.channel_size_l2, self.channel_size_l3, self.kernel_size_list[3])
 
     def forward(self, x):
         x = f.relu(self.layer1(x))
