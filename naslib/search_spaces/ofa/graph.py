@@ -31,10 +31,10 @@ class OFABlock(torch.nn.Module):
         # TODO how does expand ratio influence channels
         # my first thought for different channel and kernel sizes
         # channel size in each layer
-        self.channel_size_l0 = in_channel * self.kernel_sizes[0]
-        self.channel_size_l1 = self.channel_size_l0 * self.kernel_sizes[1]
-        self.channel_size_l2 = self.channel_size_l1 * self.kernel_sizes[2]
-        self.channel_size_l3 = self.channel_size_l2 * self.kernel_sizes[3]
+        self.channel_size_l0 = in_channel * self.expand_ratio_list[0]
+        self.channel_size_l1 = self.channel_size_l0 * self.expand_ratio_list[1]
+        self.channel_size_l2 = self.channel_size_l1 * self.expand_ratio_list[2]
+        self.channel_size_l3 = self.channel_size_l2 * self.expand_ratio_list[3]
 
         # conv layers
         # Do we need padding to keep the dimensions with different kernel sizes??
@@ -53,18 +53,18 @@ class OFABlock(torch.nn.Module):
             x = f.relu(self.layer4(x))
 
     def random_state(self):
-        self.kernel_size = np.random.choice(self.kernel_list_options)
+        self.kernel_size = np.random.choice(self.kernel_list_options, size=4)
         self.depth = np.random.choice(self.depth_list_options)
-        self.expand_ratio = np.random.choice(self.expand_ratio_list_options)
+        self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
 
     def mutate(self):
         mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])
         if mutation == "kernel_size":
-            self.kernel_size = np.random.choice(self.kernel_list_options)
+            self.kernel_size = np.random.choice(self.kernel_list_options, size=4)
         elif mutation == "depth":
             self.depth = np.random.choice(self.depth_list_options)
         elif mutation == "expand_ratio":
-            self.expand_ratio = np.random.choice(self.expand_ratio_list_options)
+            self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
         else:
             raise ValueError(f"Mutation: {mutation} not found")
 
