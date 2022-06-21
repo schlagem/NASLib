@@ -17,38 +17,54 @@ class OFABlock(torch.nn.Module):
 
     def __init__(self, in_channel, kernel_size=[3, 5, 7], depth=[2, 3, 4], expand_ratio=[3, 4, 6]):
         super().__init__()
-        self.kernel_size = max(kernel_size)
+        # the actual parameters of the OFABlock for every layer with #layers = self.depth
+        self.kernel_sizes = [max(kernel_size) for i in range(4)]
         self.depth = max(depth)
-        self.expand_ratio = max(expand_ratio)
+        self.expand_ratio_list = [max(expand_ratio) for i in range(4)]
 
-        self.kernel_list = kernel_size
-        self.depth_list = depth
-        self.expand_ratio_list = expand_ratio
+        # the parameters options, that can be applied
+        self.kernel_list_options = kernel_size
+        self.depth_list_options = depth
+        self.expand_ratio_list_options = expand_ratio
 
         # TODO change to custom conv layer with variable depth and width
         # TODO how does expand ratio influence channels
-        self.layer1 = torch.nn.Conv2d(in_channel, out_channels, kernel_size)
-        self.layer2 = torch.nn.Conv2d(in_channel, out_channels, kernel_size)
-        self.layer3 = torch.nn.Conv2d(in_channel, out_channels, kernel_size)
+        # my first thought for different channel and kernel sizes
+        # channel size in each layer
+        self.channel_size_l0 = in_channel * self.kernel_sizes[0]
+        self.channel_size_l1 = self.channel_size_l0 * self.kernel_sizes[1]
+        self.channel_size_l2 = self.channel_size_l1 * self.kernel_sizes[2]
+        self.channel_size_l3 = self.channel_size_l2 * self.kernel_sizes[3]
+
+        # conv layers
+        # Do we need padding to keep the dimensions with different kernel sizes??
+        # Include the strides
+        self.layer1 = torch.nn.Conv2d(in_channel, self.channel_size_l0, kernel_size[0])
+        self.layer2 = torch.nn.Conv2d(self.channel_size_l0, self.channel_size_l1, kernel_size[1])
+        self.layer3 = torch.nn.Conv2d(self.channel_size_l1, self.channel_size_l2, kernel_size[2])
+        self.layer4 = torch.nn.Conv2d(self.channel_size_l2, self.channel_size_l3, kernel_size[3])
 
     def forward(self, x):
         x = f.relu(self.layer1(x))
         x = f.relu(self.layer2(x))
-        x = f.relu(self.layer3(x))
+        if self.depth > 2:
+            x = f.relu(self.layer3(x))
+        if self.depth > 3:
+            x = f.relu(self.layer4(x))
 
     def random_state(self):
-        self.kernel_size = np.random.choice(self.kernel_list)
-        self.depth = np.random.choice(self.depth_list)
-        self.expand_ratio = np.random.choice(self.expand_ratio_list)
+        self.kernel_size = np.random.choice(self.kernel_list_options)
+        self.depth = np.random.choice(self.depth_list_options)
+        self.expand_ratio = np.random.choice(self.expand_ratio_list_options)
 
     def mutate(self):
         mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])
         if mutation == "kernel_size":
-            self.kernel_size = np.random.choice(self.kernel_list)
+            self.kernel_size = np.random.choice(self.kernel_list_options)
         elif mutation == "depth":
-            self.depth = np.random.choice(self.depth_list)
+            self.depth = np.random.choice(self.depth_list_options)
         elif mutation == "expand_ratio":
-            self.expand_ratio = np.random.choice(self.expand_ratio_list)
+            self.expand_ratio = np.random.choice(self.expand_ratio_list_options)
         else:
             raise ValueError(f"Mutation: {mutation} not found")
 
@@ -80,9 +96,9 @@ class OnceForAllSearchSpace(Graph):
 
         # similiar to init of
         # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/imagenet_classification/elastic_nn/networks/ofa_mbv3.py
-        self.kernel_size_list = [3, 5, 7],
-        self.expand_ratio_list = [3, 4, 6],
-        self.depth_list = [2, 3, 4]
+        self.kernel_size_list_options = [3, 5, 7],
+        self.expand_ratio_list_options = [3, 4, 6],
+        self.depth_list_options = [2, 3, 4]
 
         self.stride_stages = [1, 2, 2, 2, 1, 2]
 
