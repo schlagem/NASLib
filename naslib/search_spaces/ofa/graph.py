@@ -1,129 +1,13 @@
-import os
-import pickle
-import numpy as np
-import random
-import itertools
-import torch
-import torch.nn as nn
-import torch.nn.functional as f
+from blocks import FinalBlock, OFABlock, FirstBlock
 
-from naslib.search_spaces.core import primitives as ops
 from naslib.search_spaces.core.graph import Graph, EdgeData
-from naslib.search_spaces.core.primitives import AbstractPrimitive
 from naslib.search_spaces.core.query_metrics import Metric
 
-
-def get_same_padding(kernel_size):
-    if isinstance(kernel_size, tuple):
-        assert len(kernel_size) == 2, "invalid kernel size: %s" % kernel_size
-        p1 = get_same_padding(kernel_size[0])
-        p2 = get_same_padding(kernel_size[1])
-        return p1, p2
-    assert isinstance(kernel_size, int), "kernel size should be either `int` or `tuple`"
-    assert kernel_size % 2 > 0, "kernel size should be odd number"
-    return kernel_size // 2
-
-
-class DynamicConv2d(torch.nn.Module):
-
-    def __init__(self, max_in_channels, kernel_size_list, stride=1, dilation=1):
-        super().__init__()
-        self.max_in_channels = max_in_channels
-        self.kernel_size_list = kernel_size_list
-        self.stride = stride
-        self.dilation = dilation
-
-        self.max_kernel = max(self.max_kernel_list)
-        self.active_kernel_size = self.max_kernel
-
-        self.conv = nn.Conv2d(
-            self.max_in_channels,
-            self.max_in_channels,
-            max(self.kernel_size_list),
-            self.stride,
-            groups=self.max_in_channels,  # this acts to each channel having multiple convs with in/out channels
-            bias=False,
-        )
-
-    # TODO maybe function outside of class
-    def sub_filter_start_end(self):
-        center = self.max_kernel // 2
-        dev = self.active_kernel_size // 2
-        start, end = center - dev, center + dev + 1
-        assert end - start == self.active_kernel_size
-        return start, end
-
-    def get_active_filters(self, out_channels, in_channels):
-        start, end = self.sub_filter_start_end()
-        filters = self.conv.weight[:out_channels, :in_channels, start:end, start:end]
-        # TODO transformation needed outside of cutting out
-        return filters
-
-    def forward(self, x):
-        # TODO figure out channels
-        in_channels = x.shape[1]
-        filters = self.get_active_filters(in_channels, self.expand_ratio*in_channels)
-        padding = get_same_padding(self.active_kernel_size)
-        return f.conv2d(x, filters, None, self.stride, padding, self.dilation, c)
-
-class OFABlock(torch.nn.Module):
-
-    def __init__(self, in_channels, kernel_size=[3, 5, 7], depth=[2, 3, 4], expand_ratio=[3, 4, 6]):
-        super().__init__()
-        # the actual parameters of the OFABlock for every layer with #layers = self.depth
-        self.kernel_size_list = [max(kernel_size) for i in range(4)]
-        self.depth = max(depth)
-        self.expand_ratio_list = [max(expand_ratio) for i in range(4)]
-
-        # the parameters options, that can be applied
-        self.kernel_list_options = kernel_size
-        self.depth_list_options = depth
-        self.expand_ratio_list_options = expand_ratio
-
-        # TODO change to custom conv layer with variable depth and width
-        # TODO how does expand ratio influence channels
-
-        # my first thought for different channel and kernel sizes
-        # channel size in each layer
-        self.channel_size_l0 = in_channel * self.expand_ratio_list[0]
-        self.channel_size_l1 = self.channel_size_l0 * self.expand_ratio_list[1]
-        self.channel_size_l2 = self.channel_size_l1 * self.expand_ratio_list[2]
-        self.channel_size_l3 = self.channel_size_l2 * self.expand_ratio_list[3]
-
-        # conv layers
-        # Do we need padding to keep the dimensions with different kernel sizes??
-        # Include the strides
-        self.layer1 = torch.nn.Conv2d(in_channel, self.channel_size_l0, self.kernel_size_list[0])
-        self.layer2 = torch.nn.Conv2d(self.channel_size_l0, self.channel_size_l1, self.kernel_size_list[1])
-        self.layer3 = torch.nn.Conv2d(self.channel_size_l1, self.channel_size_l2, self.kernel_size_list[2])
-        self.layer4 = torch.nn.Conv2d(self.channel_size_l2, self.channel_size_l3, self.kernel_size_list[3])
-
-    def forward(self, x):
-        x = f.relu(self.layer1(x))
-        x = f.relu(self.layer2(x))
-        if self.depth > 2:
-            x = f.relu(self.layer3(x))
-        if self.depth > 3:
-            x = f.relu(self.layer4(x))
-
-    def random_state(self):
-        self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
-        self.depth = np.random.choice(self.depth_list_options)
-        self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
-
-    def mutate(self):
-        mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])
-        if mutation == "kernel_size":
-            self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
-        elif mutation == "depth":
-            self.depth = np.random.choice(self.depth_list_options)
-        elif mutation == "expand_ratio":
-            self.expand_ratio_list = np.random.choice(self.expand_ratio_list_options, size=4)
-        else:
-            raise ValueError(f"Mutation: {mutation} not found")
+from ofa.utils import make_divisible, val2list, MyNetwork
 
 
 class OnceForAllSearchSpace(Graph):
+    # TODO the original implemetnaion inherites form MobileNetV3 look into possible problems
     """
     Implementation of the Once for All Search space.
     """
@@ -141,27 +25,95 @@ class OnceForAllSearchSpace(Graph):
                 - Each layer kernel size {3,5,7}
                 - Each layer increases number of channels by {3,4,6}
         """
-        # TODO do we need preprocessing and post proccessing
-
         # Graph definition
-        self.number_of_units = 5
-        self.add_nodes_from(range(1, self.number_of_units + 1))
-        self.add_edges_from([(i, i + 1) for i in range(1, self.number_of_units)])
-
-        # similiar to init of
+        # similar to init only in graph version:
         # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/imagenet_classification/elastic_nn/networks/ofa_mbv3.py
-        self.kernel_size_list_options = [3, 5, 7],
-        self.expand_ratio_list_options = [3, 4, 6],
+
+        # we don't call the search space with params thus we define them here
+        # for our application this should suffice
+        n_classes = 1000  # ImageNet
+        dropout_rate = 0.1  # default Paremeter TODO check if better value
+        bn_param = (0.1, 1e-5)  # TODO check where this is used
+        # width_mult = 1.0  TODO check what this does
+        self.width_mult = 1.0
+
+        self.number_of_units = 5  # the number of dynamic units
+        base_stage_width = [16, 16, 24, 40, 80, 112, 160, 960, 1280]
+
+        final_expand_width = make_divisible(
+            base_stage_width[-2] * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
+        )
+        last_channel = make_divisible(
+            base_stage_width[-1] * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
+        )
+
+        """
+                Default params but are in each call overwritten with see below
+                ks_list = 3
+                expand_ratio_list = 6
+                depth_list = 4
+        """
+        self.ks_list = [3, 5, 7]
+        self.expand_ratio = [3, 4, 6]
         self.depth_list_options = [2, 3, 4]
 
         self.stride_stages = [1, 2, 2, 2, 1, 2]
+        act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
+        stride_stages = [1, 2, 2, 2, 1, 2]
+        se_stages = [False, False, True, False, True, True]
+        n_block_list = [1] + [max(self.depth_list)] * 5
+        width_list = []
+        for base_width in base_stage_width[:-2]:
+            width = make_divisible(
+                base_width * self.width_mult, MyNetwork.CHANNEL_DIVISIBLE
+            )
+            width_list.append(width)
 
-        # the idea is to have 5 blocks each block is the same class
-        # it takes as input the kernelsize, expand ratio and depth
-        # it has a function to randomize
-        for i in range(1, self.number_of_units + 1):
-            # TODO figure out in_channels
-            self.edges[i, i + 1].set("op", OFABlock(in_channels=3))
+        input_channel, first_block_dim = width_list[0], width_list[1]
+
+        # first block (kinda of like preprocessing)
+        # Not variable in depht width or expand ratio
+        self.add_nodes_from([1, 2])
+        first_block = FirstBlock(input_channel, first_block_dim, stride_stages[0], act_stages[0], se_stages[0])
+        self.add_edges_from([(1, 2)])
+        self.edges[1, 2].set("op", first_block)
+
+        # The next 5 blocks are the ones where the number of layers, number of channels and kernel size can be changed
+        self.add_nodes_from(range(2, 2 + self.number_of_units + 1))
+        self.add_edges_from([(i, i + 1) for i in range(2, 2 + self.number_of_units)])
+
+        # dimension
+        feature_dim = first_block_dim
+
+        i = 2
+        for width, n_block, s, act_func, use_se in zip(
+                width_list[2:],
+                n_block_list[1:],
+                stride_stages[1:],
+                act_stages[1:],
+                se_stages[1:],
+        ):
+            unit = OFABlock(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim)
+            self.edges[i, i + 1].set("op", unit)
+            feature_dim = unit.max_channel
+            i += 1
+
+        self.add_nodes_from([2 + self.number_of_units + 1])
+        self.add_edges_from([(i, i + 1) for i in range(2, 2 + self.number_of_units)])
+
+        # TODO finish call of final Block
+        final_block = FinalBlock(feature_dim, final_expand_width, last_channel, n_classes, dropout_rate)
+
+        self.edges[2 + self.number_of_units, 2 + self.number_of_units + 1].set("op", final_block)
+
+        # set bn param
+        # TODO this doesnt work iterate all modules and call this function
+        # self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
+
+        # runtime_depth
+        # doesn't work vanilla
+        # TODO fix if needed dont know what it does
+        # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     def query(self, metric: Metric, dataset: str, path: str) -> float:
         #TODO use pretrained OFA to query validation and test perfomance
@@ -176,7 +128,11 @@ class OnceForAllSearchSpace(Graph):
     def sample_random_architecture(self, dataset_api=None):
         for i in range(1, self.number_of_units + 1):
             block = self.edges[i, i + 1].op
+            # TODO do we have to set random state only for current depth
             block.random_state()
+
+    def mutate(self):
+        raise NotImplementedError
 
     def get_nbhd(self, dataset_api=None):
         raise NotImplementedError

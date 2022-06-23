@@ -22,6 +22,7 @@ grakel==0.1.8
 pyro-ppl==1.6.0
 pre-commit==2.13.0
 black==21.7b0
+ofa
 
 # additional from setup.py prev
 cycler==0.10.0 #matplotlib plots
