@@ -1,4 +1,4 @@
-from blocks import FinalBlock, OFABlock, FirstBlock
+from naslib.search_spaces.OnceForAll.blocks import FinalBlock, OFABlock, FirstBlock
 
 from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
@@ -37,7 +37,6 @@ class OnceForAllSearchSpace(Graph):
         # width_mult = 1.0  TODO check what this does
         self.width_mult = 1.0
 
-        self.number_of_units = 5  # the number of dynamic units
         base_stage_width = [16, 16, 24, 40, 80, 112, 160, 960, 1280]
 
         final_expand_width = make_divisible(
@@ -55,7 +54,7 @@ class OnceForAllSearchSpace(Graph):
         """
         self.ks_list = [3, 5, 7]
         self.expand_ratio = [3, 4, 6]
-        self.depth_list_options = [2, 3, 4]
+        self.depth_list = [2, 3, 4]
 
         self.stride_stages = [1, 2, 2, 2, 1, 2]
         act_stages = ["relu", "relu", "relu", "h_swish", "h_swish", "h_swish"]
@@ -79,7 +78,9 @@ class OnceForAllSearchSpace(Graph):
         self.edges[1, 2].set("op", first_block)
 
         # The next 5 blocks are the ones where the number of layers, number of channels and kernel size can be changed
-        self.add_nodes_from(range(2, 2 + self.number_of_units + 1))
+        self.number_of_units = 5  # the number of dynamic units
+        self.offset = 1  # refactor for loops
+        self.add_nodes_from(range(2, 2 + self.number_of_units))
         self.add_edges_from([(i, i + 1) for i in range(2, 2 + self.number_of_units)])
 
         # dimension
@@ -94,14 +95,14 @@ class OnceForAllSearchSpace(Graph):
                 se_stages[1:],
         ):
             unit = OFABlock(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim)
+            print((i, i+1))
             self.edges[i, i + 1].set("op", unit)
             feature_dim = unit.max_channel
             i += 1
 
         self.add_nodes_from([2 + self.number_of_units + 1])
-        self.add_edges_from([(i, i + 1) for i in range(2, 2 + self.number_of_units)])
+        self.add_edges_from([(2 + self.number_of_units, 2 + self.number_of_units + 1)])
 
-        # TODO finish call of final Block
         final_block = FinalBlock(feature_dim, final_expand_width, last_channel, n_classes, dropout_rate)
 
         self.edges[2 + self.number_of_units, 2 + self.number_of_units + 1].set("op", final_block)
@@ -116,7 +117,7 @@ class OnceForAllSearchSpace(Graph):
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     def query(self, metric: Metric, dataset: str, path: str) -> float:
-        #TODO use pretrained OFA to query validation and test perfomance
+        # TODO use pretrained OFA to query validation and test perfomance
         raise NotImplementedError
 
     def get_hash(self):
@@ -126,16 +127,18 @@ class OnceForAllSearchSpace(Graph):
         raise NotImplementedError
 
     def sample_random_architecture(self, dataset_api=None):
-        for i in range(1, self.number_of_units + 1):
+        for i in range(1 + self.offset, self.number_of_units + self.offset + 1):
             block = self.edges[i, i + 1].op
             # TODO do we have to set random state only for current depth
             block.random_state()
 
     def mutate(self):
+        # TODO mutate chooses one unit and mutates one layer of that block, CARE changing layer beyond active depth
+        # is invalid
         raise NotImplementedError
 
     def get_nbhd(self, dataset_api=None):
         raise NotImplementedError
 
     def get_type(self):
-        return "ofa"
+        return "OnceForAll"
