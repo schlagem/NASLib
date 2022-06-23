@@ -39,6 +39,10 @@ class TestOFASearchSpace(unittest.TestCase):
     def test_init(self):
         self.search_space = OnceForAllSearchSpace()
 
+    def test_mutate(self):
+        # TODO implement fucntion and test
+        pass
+
     def test_random_sample(self):
         # TODO implement function and test
         pass
