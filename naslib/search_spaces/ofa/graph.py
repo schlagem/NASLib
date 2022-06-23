@@ -107,18 +107,18 @@ class OFABlock(torch.nn.Module):
             x = f.relu(self.layer4(x))
 
     def random_state(self):
-        self.kernel_size = np.random.choice(self.kernel_list_options, size=4)
+        self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
         self.depth = np.random.choice(self.depth_list_options)
         self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
 
     def mutate(self):
         mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])
         if mutation == "kernel_size":
-            self.kernel_size = np.random.choice(self.kernel_list_options, size=4)
+            self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
         elif mutation == "depth":
             self.depth = np.random.choice(self.depth_list_options)
         elif mutation == "expand_ratio":
-            self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
+            self.expand_ratio_list = np.random.choice(self.expand_ratio_list_options, size=4)
         else:
             raise ValueError(f"Mutation: {mutation} not found")
 
