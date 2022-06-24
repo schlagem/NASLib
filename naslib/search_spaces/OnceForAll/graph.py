@@ -4,6 +4,7 @@ from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
 
 from ofa.utils import make_divisible, val2list, MyNetwork
+import numpy as np
 
 
 class OnceForAllSearchSpace(Graph):
@@ -95,7 +96,6 @@ class OnceForAllSearchSpace(Graph):
                 se_stages[1:],
         ):
             unit = OFABlock(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim)
-            print((i, i+1))
             self.edges[i, i + 1].set("op", unit)
             feature_dim = unit.max_channel
             i += 1
@@ -117,6 +117,7 @@ class OnceForAllSearchSpace(Graph):
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     def query(self, metric: Metric, dataset: str, path: str) -> float:
+        # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial/imagenet_eval_helper.py
         # TODO use pretrained OFA to query validation and test perfomance
         raise NotImplementedError
 
@@ -129,8 +130,7 @@ class OnceForAllSearchSpace(Graph):
     def sample_random_architecture(self, dataset_api=None):
         for i in range(1 + self.offset, self.number_of_units + self.offset + 1):
             block = self.edges[i, i + 1].op
-            # TODO do we have to set random state only for current depth
-            block.random_state()
+            block.random_state(np.random.choice(self.depth_list))
 
     def mutate(self):
         # TODO mutate chooses one unit and mutates one layer of that block, CARE changing layer beyond active depth

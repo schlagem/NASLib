@@ -107,15 +107,15 @@ class OFABlock(torch.nn.Module):
 
     def forward(self, x):
         for i in range(self.depth):  # TODO is here +1 needed
-            x = self.blocks[i](x)
+            x = self.blocks[i].conv # TODO conv is not correct normal forward of block right?
         return x
 
-    def random_state(self):
-        #TODO self.kernel_list is not defined before
-        #TODO self.expand_ratio is not defined before
-        self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
-        self.depth = np.random.choice(self.depth_list_options)
-        self.expand_ratio = np.random.choice(self.expand_ratio_list_options, size=4)
+    def random_state(self, depth):
+        self.depth = depth
+        for block in self.blocks:
+            print(type(block))
+            block.conv.active_ks = np.random.choice(block.conv.kernel_size_list)
+            block.conv.active_expand_ratio = np.random.choice(block.conv.expand_ratio_list)
 
     def mutate(self):
         mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])

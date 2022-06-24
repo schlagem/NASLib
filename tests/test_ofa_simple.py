@@ -29,42 +29,29 @@ class TestOFASearchSpace(unittest.TestCase):
 
     def setUp(self):
         utils.set_seed(1)
-        self.search_space = None
-        """
-        self.optimizer = DARTSOptimizer(config)
-        self.optimizer.adapt_search_space(SimpleCellSearchSpace())
-        self.optimizer.before_training()
-        """
-
-    def test_init(self):
         self.search_space = OnceForAllSearchSpace()
 
     def test_mutate(self):
         # TODO implement fucntion and test
-        pass
+        raise NotImplementedError
 
     def test_random_sample(self):
-        # TODO implement function and test
-        pass
-        """
-        stats = self.optimizer.step(data_train, data_val)
-        self.assertTrue(len(stats) == 4)
-        self.assertAlmostEqual(stats[2].detach().cpu().numpy(), 2.4303, places=3)
-        self.assertAlmostEqual(stats[3].detach().cpu().numpy(), 2.4303, places=3)
-        """
+        for i in range(1000):
+            self.search_space.sample_random_architecture()
+            for j in range(1 + self.search_space.offset,
+                           self.search_space.number_of_units + self.search_space.offset + 1):
+                block = self.search_space.edges[j, j + 1].op
+                self.assertTrue(block.depth in [2, 3, 4])
+                for layer in block.blocks:
+                    self.assertTrue(layer.conv.active_kernel_size in [3, 5, 7])
+                    self.assertTrue(layer.conv.active_expand_ratio in [3, 4, 6])
+
+    def test_forward(self):
+        raise NotImplementedError
 
     def test_query(self):
         # TODO implemnt function and test
-        pass
-        """
-        final_arch = self.optimizer.get_final_architecture()
-        logits = final_arch(data_train[0])
-        self.assertTrue(logits.shape == (2, 10))
-        self.assertAlmostEqual(logits[0, 0].detach().cpu().numpy(), 0.0921, places=3)
-        """
-
-
-
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
