@@ -35,7 +35,9 @@ def calc_state_diff(state, new_state):
             # layers
             if old[0] != new[0] or old[1] != new[1]:
                 changes += 1
+            assert isinstance(new[0], int) or isinstance(new[0], tuple)  # requirement by ofa code
     return changes
+
 
 class TestOFASearchSpace(unittest.TestCase):
 
@@ -80,11 +82,13 @@ class TestOFASearchSpace(unittest.TestCase):
                     self.assertTrue(layer.conv.active_expand_ratio in [3, 4, 6])
 
     def test_forward(self):
-        x = torch.rand((16, 3, 3, 3))
-        y = self.search_space.forward(x)
+        for i in range(100):
+            self.search_space.sample_random_architecture()
+            x = torch.rand((16, 3, 3, 3))
+            y = self.search_space.forward(x)
 
     def test_query(self):
-        # TODO implemnt function and test
+        # TODO maybe test accuracy
         self.search_space._set_weights()
         raise NotImplementedError
 

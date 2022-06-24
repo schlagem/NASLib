@@ -85,8 +85,15 @@ class FinalBlock(AbstractPrimitive):
         x = self.classifier(x)
         return x
 
-    def set_weights(self):  # TODO maybe change to load_state_dict
-        raise NotImplementedError
+    def set_weights(self, final_expand_dict, feature_mix_dict, classifier_dict):
+        assert self.final_expand_layer.state_dict().keys() == final_expand_dict.keys()
+        self.final_expand_layer.load_state_dict(final_expand_dict)
+
+        assert self.feature_mix_layer.state_dict().keys() == feature_mix_dict.keys()
+        self.feature_mix_layer.load_state_dict(feature_mix_dict)
+
+        assert self.classifier.state_dict().keys() == classifier_dict.keys()
+        self.classifier.load_state_dict(classifier_dict)
 
     def get_embedded_ops(self):
         return None
@@ -132,29 +139,33 @@ class OFABlock(AbstractPrimitive):
     def random_state(self):
         self.depth = np.random.choice(self.depth_list)
         for block in self.blocks:
-            block.conv.active_kernel_size = np.random.choice(block.conv.kernel_size_list)
-            block.conv.active_expand_ratio = np.random.choice(block.conv.expand_ratio_list)
+            block.conv.active_kernel_size = int(np.random.choice(block.conv.kernel_size_list))
+            block.conv.active_expand_ratio = int(np.random.choice(block.conv.expand_ratio_list))
 
     def mutate(self):
         mutation_type = np.random.choice(["depth", "kernel", "expand_ratio"])
         if mutation_type == "depth":
             choices = [d for d in self.depth_list if d != self.depth]
-            self.depth = np.random.choice(choices)
+            self.depth = int(np.random.choice(choices))
         elif mutation_type == "kernel":
             block = np.random.choice(self.blocks[:self.depth])
             ks = block.conv.active_kernel_size
             choices = [k for k in block.conv.kernel_size_list if k != ks]
-            block.conv.active_kernel_size = np.random.choice(choices)
+            block.conv.active_kernel_size = int(np.random.choice(choices))
         elif mutation_type == "expand_ratio":
             block = np.random.choice(self.blocks[:self.depth])
             er = block.conv.active_expand_ratio
             choices = [e for e in block.conv.expand_ratio_list if e != er]
-            block.conv.active_expand_ratio = np.random.choice(choices)
+            block.conv.active_expand_ratio = int(np.random.choice(choices))
         else:
             raise NotImplementedError(f"The mutation type {mutation_type} not supported")
 
-    def set_weights(self):  # TODO maybe change to load_state_dict
-        raise NotImplementedError
+    def set_weights(self, list_of_dicts):  # TODO maybe change to load_state_dict
+        idx = 0
+        for layer in self.blocks:
+            assert layer.state_dict().keys() == list_of_dicts[idx].keys()
+            layer.load_state_dict(list_of_dicts[idx])
+            idx += 1
 
     def get_embedded_ops(self):
         return None

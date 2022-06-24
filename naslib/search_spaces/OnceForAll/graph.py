@@ -131,7 +131,6 @@ class OnceForAllSearchSpace(Graph):
             map_location="cpu",
             )["state_dict"]
         keys = init.keys()
-        # TODO finish applying weights to OFA net space
 
         # First unit weights
         first_unit = self.edges[1, 2].op
@@ -140,11 +139,28 @@ class OnceForAllSearchSpace(Graph):
                                         if "blocks.0" in k)
         first_unit.set_weights(first_conv_state, first_block_state)
 
-        # TODO 5 Dynamics units
-        raise NotImplementedError
+        # 5 Dynamics units
+        block_idx = 1
+        for i in range(1 + self.offset, self.number_of_units + self.offset + 1):
+            block = self.edges[i, i + 1].op
+            list_of_dicts = []
+            for j in range(max(self.depth_list)):
+                block_dict = OrderedDict((k.replace("blocks." + str(block_idx) + ".mobile_inverted_conv", "conv"),
+                                          init[k]) for k in keys if "blocks." + str(block_idx) + "." in k)
+                list_of_dicts.append(block_dict)
+                block_idx += 1
+            block.set_weights(list_of_dicts)
 
-        # TODO Last unit
-        raise NotImplementedError
+        # final unit weigths
+        final_unit = self.edges[7, 8].op  # TODO maybe dont hard code this
+        print(init.keys())
+        final_expand_dict = OrderedDict((k.replace("final_expand_layer.", ""), init[k]) for k in keys
+                                        if "final_expand_layer." in k)
+        feature_mix_dict = OrderedDict((k.replace("feature_mix_layer.", ""), init[k]) for k in keys
+                                       if "feature_mix_layer." in k)
+        classifier_dict = OrderedDict((k.replace("classifier.", ""), init[k]) for k in keys
+                                      if "classifier." in k)
+        final_unit.set_weights(final_expand_dict, feature_mix_dict, classifier_dict)
 
     def query(self, metric: Metric, dataset: str, path: str) -> float:
         # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial/imagenet_eval_helper.py
