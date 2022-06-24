@@ -15,11 +15,13 @@ from ofa.utils.layers import (
 from ofa.imagenet_classification.networks import MobileNetV3
 from ofa.utils import make_divisible, val2list, MyNetwork
 
+from ..core.primitives import AbstractPrimitive
 
-class FirstBlock(torch.nn.Module):
+
+class FirstBlock(AbstractPrimitive):
 
     def __init__(self, input_channel, first_block_dim, stride, act_func, se):
-        super().__init__()
+        super().__init__(locals())
         self.first_conv = ConvLayer(
             3, input_channel, kernel_size=3, stride=2, act_func="h_swish"
         )
@@ -40,16 +42,19 @@ class FirstBlock(torch.nn.Module):
             else None,
         )
 
-    def forward(self, x):
+    def forward(self, x, edge_data):
         x = self.first_conv(x)
         x = self.first_block(x)
         return x
 
+    def get_embedded_ops(self):
+        return None
 
-class FinalBlock(torch.nn.Module):
+
+class FinalBlock(AbstractPrimitive):
 
     def __init__(self, feature_dim, final_expand_width, last_channel, n_classes, dropout_rate):
-        super().__init__()
+        super().__init__(locals())
 
         self.final_expand_layer = ConvLayer(
             feature_dim, final_expand_width, kernel_size=1, act_func="h_swish"
@@ -65,7 +70,7 @@ class FinalBlock(torch.nn.Module):
 
         self.classifier = LinearLayer(last_channel, n_classes, dropout_rate=dropout_rate)
 
-    def forward(self, x):
+    def forward(self, x, edge_data):
         x = self.final_expand_layer(x)
         x = x.mean(3, keepdim=True).mean(2, keepdim=True)
         x = self.feature_mix_layer(x)
@@ -73,11 +78,14 @@ class FinalBlock(torch.nn.Module):
         x = self.classifier(x)
         return x
 
+    def get_embedded_ops(self):
+        return None
 
-class OFABlock(torch.nn.Module):
+
+class OFABlock(AbstractPrimitive):
 
     def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim, depth_list):
-        super().__init__()
+        super().__init__(locals())
         # the actual parameters of the OFABlock for every layer with #layers = self.depth
         self.depth_list = depth_list
         self.max_channel = None
@@ -106,7 +114,7 @@ class OFABlock(torch.nn.Module):
             feature_dim = output_channel
         self.max_channel = feature_dim
 
-    def forward(self, x):
+    def forward(self, x, edge_data):
         for block in self.blocks[:self.depth]:
             x = block(x)
         return x
@@ -134,4 +142,7 @@ class OFABlock(torch.nn.Module):
             block.conv.active_expand_ratio = np.random.choice(choices)
         else:
             raise NotImplementedError(f"The mutation type {mutation_type} not supported")
+
+    def get_embedded_ops(self):
+        return None
 

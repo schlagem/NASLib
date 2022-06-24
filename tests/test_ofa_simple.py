@@ -80,7 +80,8 @@ class TestOFASearchSpace(unittest.TestCase):
                     self.assertTrue(layer.conv.active_expand_ratio in [3, 4, 6])
 
     def test_forward(self):
-        raise NotImplementedError
+        x = torch.rand((16, 3, 3, 3))
+        y = self.search_space.forward(x)
 
     def test_query(self):
         # TODO implemnt function and test
