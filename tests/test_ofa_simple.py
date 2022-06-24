@@ -7,6 +7,8 @@ from naslib.search_spaces.OnceForAll.graph import *
 from naslib.optimizers import DARTSOptimizer, GDASOptimizer, DrNASOptimizer
 from naslib.utils import utils, setup_logger
 
+from ofa.model_zoo import ofa_net
+
 logger = setup_logger(os.path.join(utils.get_project_root().parent, "tmp", "tests.log"))
 logger.handlers[0].setLevel(logging.FATAL)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -82,10 +84,20 @@ class TestOFASearchSpace(unittest.TestCase):
                     self.assertTrue(layer.conv.active_expand_ratio in [3, 4, 6])
 
     def test_forward(self):
-        for i in range(100):
+        self.search_space._set_weights()
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        ofa_network = ofa_net(net_id, pretrained=True)
+        print(ofa_network.module_str)
+        print(self.search_space.module_str)
+        for i in range(1):
+            x = torch.rand((3, 3, 3, 3))
+            y_graph = self.search_space.forward(x)
+            y_ofa = ofa_network(x)
+            # TODO they are almost equal ->> Error probadly because BatchNorm values not set correctly see init
+            print(torch.max(y_ofa, dim=1))
+            print(torch.max(y_graph, dim=1))
+            self.assertTrue(torch.equal(y_graph, y_ofa))
             self.search_space.sample_random_architecture()
-            x = torch.rand((16, 3, 3, 3))
-            y = self.search_space.forward(x)
 
     def test_query(self):
         # TODO maybe test accuracy

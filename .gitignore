@@ -151,3 +151,6 @@ Session.vim
 *~
 # Auto-generated tag files
 tags
+
+# Once for all related
+.torch/

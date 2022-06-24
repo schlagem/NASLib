@@ -15,6 +15,8 @@ from ofa.utils.layers import (
 from ofa.imagenet_classification.networks import MobileNetV3
 from ofa.utils import make_divisible, val2list, MyNetwork
 
+from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
+
 from ..core.primitives import AbstractPrimitive
 
 
@@ -46,6 +48,12 @@ class FirstBlock(AbstractPrimitive):
         x = self.first_conv(x)
         x = self.first_block(x)
         return x
+
+    @property
+    def module_str(self):
+        _str = self.first_conv.module_str + "\n"
+        _str += self.first_block.module_str + "\n"
+        return _str
 
     def set_weights(self, conv_state_dict, block_state_dict):
         assert self.first_conv.state_dict().keys() == conv_state_dict.keys()
@@ -84,6 +92,13 @@ class FinalBlock(AbstractPrimitive):
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
+
+    @property
+    def module_str(self):
+        _str = self.final_expand_layer.module_str + "\n"
+        _str += self.feature_mix_layer.module_str + "\n"
+        _str += self.classifier.module_str + "\n"
+        return _str
 
     def set_weights(self, final_expand_dict, feature_mix_dict, classifier_dict):
         assert self.final_expand_layer.state_dict().keys() == final_expand_dict.keys()
@@ -135,6 +150,13 @@ class OFABlock(AbstractPrimitive):
         for block in self.blocks[:self.depth]:
             x = block(x)
         return x
+
+    @property
+    def module_str(self):  # TODO care similiar named function in graph
+        _str = ""
+        for block in self.blocks[:self.depth]:
+            _str += block.module_str + "\n"
+        return _str
 
     def random_state(self):
         self.depth = np.random.choice(self.depth_list)

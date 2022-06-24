@@ -6,6 +6,7 @@ from naslib.search_spaces.core.query_metrics import Metric
 # Once for all imports
 from ofa.utils import make_divisible, val2list, MyNetwork
 from ofa.utils import download_url
+from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
 
 # other imports
 import numpy as np
@@ -116,12 +117,21 @@ class OnceForAllSearchSpace(Graph):
 
         # set bn param
         # TODO this doesnt work iterate all modules and call this function
+        # TODO IMPLEMENT THIS FUNCTION
         # self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
 
         # runtime_depth
         # doesn't work vanilla
         # TODO fix if needed dont know what it does
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
+
+    @property
+    def module_str(self):
+        _str = ""
+        for j in range(1, 8):
+            block = self.edges[j, j + 1].op
+            _str += block.module_str
+        return _str
 
     def _set_weights(self):
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
@@ -153,7 +163,6 @@ class OnceForAllSearchSpace(Graph):
 
         # final unit weigths
         final_unit = self.edges[7, 8].op  # TODO maybe dont hard code this
-        print(init.keys())
         final_expand_dict = OrderedDict((k.replace("final_expand_layer.", ""), init[k]) for k in keys
                                         if "final_expand_layer." in k)
         feature_mix_dict = OrderedDict((k.replace("feature_mix_layer.", ""), init[k]) for k in keys
