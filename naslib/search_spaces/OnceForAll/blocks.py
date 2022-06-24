@@ -114,7 +114,7 @@ class OFABlock(torch.nn.Module):
     def random_state(self):
         self.depth = np.random.choice(self.depth_list)
         for block in self.blocks:
-            block.conv.active_ks = np.random.choice(block.conv.kernel_size_list)
+            block.conv.active_kernel_size = np.random.choice(block.conv.kernel_size_list)
             block.conv.active_expand_ratio = np.random.choice(block.conv.expand_ratio_list)
 
     def mutate(self):
