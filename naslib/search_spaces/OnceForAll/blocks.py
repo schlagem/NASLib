@@ -47,6 +47,13 @@ class FirstBlock(AbstractPrimitive):
         x = self.first_block(x)
         return x
 
+    def set_weights(self, conv_state_dict, block_state_dict):
+        assert self.first_conv.state_dict().keys() == conv_state_dict.keys()
+        self.first_conv.load_state_dict(conv_state_dict)
+
+        assert self.first_block.state_dict().keys() == block_state_dict.keys()
+        self.first_block.load_state_dict(block_state_dict)
+
     def get_embedded_ops(self):
         return None
 
@@ -77,6 +84,9 @@ class FinalBlock(AbstractPrimitive):
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
+
+    def set_weights(self):  # TODO maybe change to load_state_dict
+        raise NotImplementedError
 
     def get_embedded_ops(self):
         return None
@@ -142,6 +152,9 @@ class OFABlock(AbstractPrimitive):
             block.conv.active_expand_ratio = np.random.choice(choices)
         else:
             raise NotImplementedError(f"The mutation type {mutation_type} not supported")
+
+    def set_weights(self):  # TODO maybe change to load_state_dict
+        raise NotImplementedError
 
     def get_embedded_ops(self):
         return None

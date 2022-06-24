@@ -1,10 +1,16 @@
+# naslib imports
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, OFABlock, FirstBlock
-
 from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
 
+# Once for all imports
 from ofa.utils import make_divisible, val2list, MyNetwork
+from ofa.utils import download_url
+
+# other imports
 import numpy as np
+import torch
+from collections import OrderedDict
 
 
 class OnceForAllSearchSpace(Graph):
@@ -117,9 +123,33 @@ class OnceForAllSearchSpace(Graph):
         # TODO fix if needed dont know what it does
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
+    def _set_weights(self):
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        url_base = "https://hanlab.mit.edu/files/OnceForAll/ofa_nets/"
+        init = torch.load(
+            download_url(url_base + net_id, model_dir=".pth/ofa_nets"),
+            map_location="cpu",
+            )["state_dict"]
+        keys = init.keys()
+        # TODO finish applying weights to OFA net space
+
+        # First unit weights
+        first_unit = self.edges[1, 2].op
+        first_conv_state = OrderedDict((k.replace("first_conv.", ""), init[k]) for k in keys if "first_conv" in k)
+        first_block_state = OrderedDict((k.replace("blocks.0.mobile_inverted_conv", "conv"), init[k]) for k in keys
+                                        if "blocks.0" in k)
+        first_unit.set_weights(first_conv_state, first_block_state)
+
+        # TODO 5 Dynamics units
+        raise NotImplementedError
+
+        # TODO Last unit
+        raise NotImplementedError
+
     def query(self, metric: Metric, dataset: str, path: str) -> float:
         # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial/imagenet_eval_helper.py
-        # TODO use pretrained OFA to query validation and test perfomance
+        # TODO generate validation and test pipeline
+        # TODO maybe there are already value somewhere (only found them for resnet space)
         raise NotImplementedError
 
     def get_hash(self):

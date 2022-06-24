@@ -85,6 +85,7 @@ class TestOFASearchSpace(unittest.TestCase):
 
     def test_query(self):
         # TODO implemnt function and test
+        self.search_space._set_weights()
         raise NotImplementedError
 
 
