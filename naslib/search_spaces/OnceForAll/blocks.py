@@ -76,9 +76,10 @@ class FinalBlock(torch.nn.Module):
 
 class OFABlock(torch.nn.Module):
 
-    def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim):
+    def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim, depth_list):
         super().__init__()
         # the actual parameters of the OFABlock for every layer with #layers = self.depth
+        self.depth_list = depth_list
         self.max_channel = None
         self.depth = n_block
         self.blocks = []  # maybe there better name
@@ -106,27 +107,31 @@ class OFABlock(torch.nn.Module):
         self.max_channel = feature_dim
 
     def forward(self, x):
-        for i in range(self.depth):  # TODO is here +1 needed
-            x = self.blocks[i].conv # TODO conv is not correct normal forward of block right?
+        for block in self.blocks[:self.depth]:
+            x = block(x)
         return x
 
-    def random_state(self, depth):
-        self.depth = depth
+    def random_state(self):
+        self.depth = np.random.choice(self.depth_list)
         for block in self.blocks:
-            print(type(block))
             block.conv.active_ks = np.random.choice(block.conv.kernel_size_list)
             block.conv.active_expand_ratio = np.random.choice(block.conv.expand_ratio_list)
 
     def mutate(self):
-        mutation = np.random.choice(["kernel_size", "depth", "expand_ratio"])
-        #TODO self.kernel_list is not defined before
-        #TODO self.expand_ratio is not defined before
-        if mutation == "kernel_size":
-            self.kernel_size_list = np.random.choice(self.kernel_list_options, size=4)
-        elif mutation == "depth":
-            self.depth = np.random.choice(self.depth_list_options)
-        elif mutation == "expand_ratio":
-            self.expand_ratio_list = np.random.choice(self.expand_ratio_list_options, size=4)
+        mutation_type = np.random.choice(["depth", "kernel", "expand_ratio"])
+        if mutation_type == "depth":
+            choices = [d for d in self.depth_list if d != self.depth]
+            self.depth = np.random.choice(choices)
+        elif mutation_type == "kernel":
+            block = np.random.choice(self.blocks[:self.depth])
+            ks = block.conv.active_kernel_size
+            choices = [k for k in block.conv.kernel_size_list if k != ks]
+            block.conv.active_kernel_size = np.random.choice(choices)
+        elif mutation_type == "expand_ratio":
+            block = np.random.choice(self.blocks[:self.depth])
+            er = block.conv.active_expand_ratio
+            choices = [e for e in block.conv.expand_ratio_list if e != er]
+            block.conv.active_expand_ratio = np.random.choice(choices)
         else:
-            raise ValueError(f"Mutation: {mutation} not found")
+            raise NotImplementedError(f"The mutation type {mutation_type} not supported")
 

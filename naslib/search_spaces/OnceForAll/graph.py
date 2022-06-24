@@ -95,7 +95,8 @@ class OnceForAllSearchSpace(Graph):
                 act_stages[1:],
                 se_stages[1:],
         ):
-            unit = OFABlock(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim)
+            unit = OFABlock(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim,
+                            self.depth_list)
             self.edges[i, i + 1].set("op", unit)
             feature_dim = unit.max_channel
             i += 1
@@ -130,12 +131,14 @@ class OnceForAllSearchSpace(Graph):
     def sample_random_architecture(self, dataset_api=None):
         for i in range(1 + self.offset, self.number_of_units + self.offset + 1):
             block = self.edges[i, i + 1].op
-            block.random_state(np.random.choice(self.depth_list))
+            block.random_state()
 
     def mutate(self):
-        # TODO mutate chooses one unit and mutates one layer of that block, CARE changing layer beyond active depth
-        # is invalid
-        raise NotImplementedError
+        # choose one unit
+        block_idx = np.random.choice([i for i in range(1 + self.offset, self.number_of_units + self.offset + 1)])
+        block = self.edges[block_idx, block_idx + 1].op
+        # in that unit one property gets mutated
+        block.mutate()
 
     def get_nbhd(self, dataset_api=None):
         raise NotImplementedError
