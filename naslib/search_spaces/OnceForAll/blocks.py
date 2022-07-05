@@ -114,6 +114,41 @@ class FinalBlock(AbstractPrimitive):
         return None
 
 
+class OFAConv():
+
+    def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim):
+
+        output_channel = width
+        self.mobile_inverted_conv = DynamicMBConvLayer(
+            in_channel_list=val2list(feature_dim),
+            out_channel_list=val2list(output_channel),
+            kernel_size_list=ks_list,
+            expand_ratio_list=expand_ratio_list,
+            stride=s,
+            act_func=act_func,
+            use_se=use_se,
+        )
+        if s == 1 and feature_dim == output_channel:
+            shortcut = IdentityLayer(feature_dim, feature_dim)
+        else:
+            shortcut = None
+        self.res_block = ResidualBlock(self.mobile_inverted_conv, shortcut)
+
+
+class OFALayer(AbstractPrimitive):
+
+    def __init__(self, ofa_conv, active_kernel_size, active_expand_ratio):
+        self.ofa_conv = ofa_conv
+        self.active_kernel_size = active_kernel_size
+        self.active_expand_ratio = active_expand_ratio
+
+    def forward(self, x):
+        self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
+        self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
+        x = self.ofa_conv.res_block(x)
+
+
+
 class OFABlock(AbstractPrimitive):
 
     def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim, depth_list):
