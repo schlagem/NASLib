@@ -116,9 +116,11 @@ class OnceForAllSearchSpace(Graph):
         self.edges[2 + self.number_of_units, 2 + self.number_of_units + 1].set("op", final_block)
 
         # set bn param
-        # TODO this doesnt work iterate all modules and call this function
-        # TODO IMPLEMENT THIS FUNCTION
         # self.set_bn_param(momentum=bn_param[0], eps=bn_param[1])
+        # TODO this should be correct but doesnt seem to have any effect
+        for j in range(1, 8):
+            block = self.edges[j, j + 1].op
+            block.set_bn(momentum=bn_param[0], eps=bn_param[1])
 
         # runtime_depth
         # doesn't work vanilla
@@ -170,6 +172,12 @@ class OnceForAllSearchSpace(Graph):
         classifier_dict = OrderedDict((k.replace("classifier.", ""), init[k]) for k in keys
                                       if "classifier." in k)
         final_unit.set_weights(final_expand_dict, feature_mix_dict, classifier_dict)
+
+    def state_dict(self, destination=None, prefix='', keep_vars=False):
+        dictionary = OrderedDict()
+        for i in self.edges:
+            dictionary.update(self.edges[i].op.state_dict())
+        return dictionary
 
     def query(self, metric: Metric, dataset: str, path: str) -> float:
         # https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial/imagenet_eval_helper.py

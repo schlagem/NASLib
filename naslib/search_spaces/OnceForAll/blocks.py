@@ -1,6 +1,8 @@
 
 import numpy as np
 import torch
+from collections import OrderedDict
+
 
 from ofa.imagenet_classification.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer,
@@ -16,6 +18,8 @@ from ofa.imagenet_classification.networks import MobileNetV3
 from ofa.utils import make_divisible, val2list, MyNetwork
 
 from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
+from ofa.utils import set_bn_param
+
 
 from ..core.primitives import AbstractPrimitive
 
@@ -55,12 +59,23 @@ class FirstBlock(AbstractPrimitive):
         _str += self.first_block.module_str + "\n"
         return _str
 
+    def set_bn(self, momentum, eps):
+        set_bn_param(self.first_block, momentum, eps)
+        set_bn_param(self.first_conv, momentum, eps)
+
     def set_weights(self, conv_state_dict, block_state_dict):
         assert self.first_conv.state_dict().keys() == conv_state_dict.keys()
+        assert len(self.first_conv.state_dict().keys()) == len(conv_state_dict.keys())
         self.first_conv.load_state_dict(conv_state_dict)
 
         assert self.first_block.state_dict().keys() == block_state_dict.keys()
+        assert len(self.first_block.state_dict().keys()) == len(block_state_dict.keys())
         self.first_block.load_state_dict(block_state_dict)
+
+    def state_dict(self, destination=None, prefix='', keep_vars=False):
+        d = super().state_dict()
+        new_dict = OrderedDict([(k.replace("first_conv.", "block.0"), v) if "block.0" in k else (k, v) for k, v in d.items()])
+        return new_dict
 
     def get_embedded_ops(self):
         return None
@@ -100,14 +115,22 @@ class FinalBlock(AbstractPrimitive):
         _str += self.classifier.module_str + "\n"
         return _str
 
+    def set_bn(self, momentum, eps):
+        set_bn_param(self.final_expand_layer, momentum, eps)
+        set_bn_param(self.feature_mix_layer, momentum, eps)
+        set_bn_param(self.classifier, momentum, eps)
+
     def set_weights(self, final_expand_dict, feature_mix_dict, classifier_dict):
+        assert len(self.final_expand_layer.state_dict().keys()) == len(final_expand_dict.keys())
         assert self.final_expand_layer.state_dict().keys() == final_expand_dict.keys()
         self.final_expand_layer.load_state_dict(final_expand_dict)
 
         assert self.feature_mix_layer.state_dict().keys() == feature_mix_dict.keys()
+        assert len(self.feature_mix_layer.state_dict().keys()) == len(feature_mix_dict.keys())
         self.feature_mix_layer.load_state_dict(feature_mix_dict)
 
         assert self.classifier.state_dict().keys() == classifier_dict.keys()
+        assert len(self.classifier.state_dict().keys()) == len(classifier_dict.keys())
         self.classifier.load_state_dict(classifier_dict)
 
     def get_embedded_ops(self):
@@ -118,7 +141,7 @@ class OFABlock(AbstractPrimitive):
 
     def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim, depth_list):
         super().__init__(locals())
-        # the actual parameters of the OFABlock for every layer with #layers = self.depth
+        # the actual parameters of the OFABlock for every layer with #layers equal to self.depth
         self.depth_list = depth_list
         self.max_channel = None
         self.depth = n_block
@@ -158,6 +181,10 @@ class OFABlock(AbstractPrimitive):
             _str += block.module_str + "\n"
         return _str
 
+    def set_bn(self, momentum, eps):
+        for b in self.blocks:
+            set_bn_param(b, momentum, eps)
+
     def random_state(self):
         self.depth = np.random.choice(self.depth_list)
         for block in self.blocks:
@@ -182,9 +209,10 @@ class OFABlock(AbstractPrimitive):
         else:
             raise NotImplementedError(f"The mutation type {mutation_type} not supported")
 
-    def set_weights(self, list_of_dicts):  # TODO maybe change to load_state_dict
+    def set_weights(self, list_of_dicts):
         idx = 0
         for layer in self.blocks:
+            assert len(layer.state_dict().keys()) == len(list_of_dicts[idx].keys())
             assert layer.state_dict().keys() == list_of_dicts[idx].keys()
             layer.load_state_dict(list_of_dicts[idx])
             idx += 1
