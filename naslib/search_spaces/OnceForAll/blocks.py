@@ -137,7 +137,7 @@ class FinalBlock(AbstractPrimitive):
         return None
 
 
-class OFAConv():
+class OFAConv:
 
     def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim):
 
@@ -161,97 +161,17 @@ class OFAConv():
 class OFALayer(AbstractPrimitive):
 
     def __init__(self, ofa_conv, active_kernel_size, active_expand_ratio):
+        super().__init__(locals())
         self.ofa_conv = ofa_conv
         self.active_kernel_size = active_kernel_size
         self.active_expand_ratio = active_expand_ratio
 
-    def forward(self, x):
+    def forward(self, x, edge_data):
         self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
         self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
         x = self.ofa_conv.res_block(x)
-
-
-
-class OFABlock(AbstractPrimitive):
-
-    def __init__(self, width, n_block, s, act_func, use_se, ks_list, expand_ratio_list, feature_dim, depth_list):
-        super().__init__(locals())
-        # the actual parameters of the OFABlock for every layer with #layers equal to self.depth
-        self.depth_list = depth_list
-        self.max_channel = None
-        self.depth = n_block
-        self.blocks = []  # maybe there better name
-        output_channel = width
-        for i in range(n_block):
-            if i == 0:
-                stride = s
-            else:
-                stride = 1
-            mobile_inverted_conv = DynamicMBConvLayer(
-                in_channel_list=val2list(feature_dim),
-                out_channel_list=val2list(output_channel),
-                kernel_size_list=ks_list,
-                expand_ratio_list=expand_ratio_list,
-                stride=stride,
-                act_func=act_func,
-                use_se=use_se,
-            )
-            if stride == 1 and feature_dim == output_channel:
-                shortcut = IdentityLayer(feature_dim, feature_dim)
-            else:
-                shortcut = None
-            self.blocks.append(ResidualBlock(mobile_inverted_conv, shortcut))
-            feature_dim = output_channel
-        self.max_channel = feature_dim
-
-    def forward(self, x, edge_data):
-        for block in self.blocks[:self.depth]:
-            x = block(x)
         return x
 
-    @property
-    def module_str(self):  # TODO care similiar named function in graph
-        _str = ""
-        for block in self.blocks[:self.depth]:
-            _str += block.module_str + "\n"
-        return _str
-
-    def set_bn(self, momentum, eps):
-        for b in self.blocks:
-            set_bn_param(b, momentum, eps)
-
-    def random_state(self):
-        self.depth = np.random.choice(self.depth_list)
-        for block in self.blocks:
-            block.conv.active_kernel_size = int(np.random.choice(block.conv.kernel_size_list))
-            block.conv.active_expand_ratio = int(np.random.choice(block.conv.expand_ratio_list))
-
-    def mutate(self):
-        mutation_type = np.random.choice(["depth", "kernel", "expand_ratio"])
-        if mutation_type == "depth":
-            choices = [d for d in self.depth_list if d != self.depth]
-            self.depth = int(np.random.choice(choices))
-        elif mutation_type == "kernel":
-            block = np.random.choice(self.blocks[:self.depth])
-            ks = block.conv.active_kernel_size
-            choices = [k for k in block.conv.kernel_size_list if k != ks]
-            block.conv.active_kernel_size = int(np.random.choice(choices))
-        elif mutation_type == "expand_ratio":
-            block = np.random.choice(self.blocks[:self.depth])
-            er = block.conv.active_expand_ratio
-            choices = [e for e in block.conv.expand_ratio_list if e != er]
-            block.conv.active_expand_ratio = int(np.random.choice(choices))
-        else:
-            raise NotImplementedError(f"The mutation type {mutation_type} not supported")
-
-    def set_weights(self, list_of_dicts):
-        idx = 0
-        for layer in self.blocks:
-            assert len(layer.state_dict().keys()) == len(list_of_dicts[idx].keys())
-            assert layer.state_dict().keys() == list_of_dicts[idx].keys()
-            layer.load_state_dict(list_of_dicts[idx])
-            idx += 1
-
     def get_embedded_ops(self):
-        return None
+        pass
 
