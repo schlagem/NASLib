@@ -4,6 +4,7 @@ import torch
 import os
 
 from naslib.search_spaces.OnceForAll.graph import *
+from naslib.search_spaces.darts.graph import *
 from naslib.optimizers import DARTSOptimizer, GDASOptimizer, DrNASOptimizer
 from naslib.utils import utils, setup_logger
 
@@ -65,6 +66,7 @@ class TestOFASearchSpace(unittest.TestCase):
         Test that mutation always changes exactly one property
         generate data structure to comapre can be maybe moved to search space (somewhat like identyfying hash)
         """
+        raise NotImplementedError
         for i in range(1000):
             state = self.generate_ds()
             self.search_space.mutate()
@@ -75,34 +77,48 @@ class TestOFASearchSpace(unittest.TestCase):
     def test_random_sample(self):
         for i in range(1000):
             self.search_space.sample_random_architecture()
-            for j in range(1 + self.search_space.offset,
-                           self.search_space.number_of_units + self.search_space.offset + 1):
-                block = self.search_space.edges[j, j + 1].op
-                self.assertTrue(block.depth in [2, 3, 4])
-                for layer in block.blocks:
-                    self.assertTrue(layer.conv.active_kernel_size in [3, 5, 7])
-                    self.assertTrue(layer.conv.active_expand_ratio in [3, 4, 6])
+            for start_node, n_block in zip(
+                    self.search_space.block_start_nodes,
+                    [4] * 5,
+            ):
+                for n in range(n_block):
+                    # check active layer valid
+                    layer = self.search_space.edges[start_node + n, start_node + n + 1].op
+                    self.assertTrue(layer.active_kernel_size in [3, 5, 7])
+                    self.assertTrue(layer.active_expand_ratio in [3, 4, 6])
 
-    def test_forward(self):
+            for d in self.search_space.depth_nodes:
+                # check active depth valid
+                active_op = []
+                for j in range(1, 4):
+                    active_op.append(self.search_space.edges[d - j, d].op_index)  # set all zero
+                unique, counts = np.unique(active_op, return_counts=True)
+                print(unique, counts)
+                self.assertTrue((unique == [0, 1]).all())
+                self.assertTrue((counts == [1, 2]).all())
+
+    def test_forward_working(self):
+        self.search_space.sample_random_architecture()
+        for i in range(10):
+            x = torch.rand((3, 3, 3, 3))
+            y_graph = self.search_space.forward(x)
+            self.search_space.sample_random_architecture()
+
+    def test_forward_correctness(self):
+        raise NotImplementedError
+        # requires loading weights
         self.search_space._set_weights()
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
-        return
-        print(ofa_network.module_str)
-        print(self.search_space.module_str)
         for i in range(1):
             x = torch.rand((3, 3, 3, 3))
             y_graph = self.search_space.forward(x)
-            random_subnet = ofa_network.get_active_subnet(preserve_weight=True)
             y_ofa = ofa_network(x)
-            print(ofa_network.runtime_depth)
-            # TODO unequal values
-            print(y_ofa)
-            print(y_graph)
             self.assertTrue(torch.equal(y_graph, y_ofa))
-            # self.search_space.sample_random_architecture()
 
     def test_weights(self):
+        raise NotImplementedError
+        # TODO reimplement it
         self.search_space._set_weights()
         state = self.search_space.state_dict()
         print(list(state.keys())[:18])
@@ -124,10 +140,9 @@ class TestOFASearchSpace(unittest.TestCase):
 
     def test_query(self):
         # TODO maybe test accuracy
-        self.search_space._set_weights()
-        return
         raise NotImplementedError
+        self.search_space._set_weights()
+
 
 if __name__ == '__main__':
-
     unittest.main()

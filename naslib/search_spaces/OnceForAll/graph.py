@@ -1,5 +1,5 @@
 # naslib imports
-from naslib.search_spaces.OnceForAll.blocks import FinalBlock, OFABlock, FirstBlock, OFAConv, OFALayer
+from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
 from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
 from naslib.search_spaces.core import primitives as ops
@@ -73,8 +73,8 @@ class OnceForAllSearchSpace(Graph):
         self.name = "ofa"
 
         # node types
-        self.depth_nodes = [7,13,19,25,31]
-        self.block_start_nodes = [2,8,14,20,26]
+        self.depth_nodes = [7, 13, 19, 25, 31]
+        self.block_start_nodes = [2, 8, 14, 20, 26]
 
         #
         # nodes
@@ -90,7 +90,7 @@ class OnceForAllSearchSpace(Graph):
         self.add_edges_from([(1, 2), (31, 32)])
 
         # edges between blocks, always identity
-        self.add_edges_from([(i, i+1, EdgeData().finalize()) for i in self.depth_nodes[:-1]])
+        self.add_edges_from([(i, i+1) for i in self.depth_nodes[:-1]])
 
         # intermediate edges
         for i in self.block_start_nodes:
@@ -107,7 +107,7 @@ class OnceForAllSearchSpace(Graph):
 
         # preprocessing, first conv layer
         first_block = FirstBlock(input_channel, first_block_dim, stride_stages[0], act_stages[0], se_stages[0])
-        self.edges([1, 2]).set("op", first_block)
+        self.edges[1, 2].set("op", first_block)
 
         # intermediate nodes
         feature_dim = first_block_dim
@@ -120,19 +120,22 @@ class OnceForAllSearchSpace(Graph):
             act_stages[1:],
             se_stages[1:],
         ):
+            output_channel = width
             # make an OFA layer object for all 9 edges cause of weight sharing?
             for i in range(n_block):
                 if i == 0:
                     stride = s
                 else:
                     stride = 1
-                ofa_conv = OFAConv(width, n_block, s, act_func, use_se, self.ks_list, self.expand_ratio, feature_dim)
+                ofa_conv = OFAConv(width, n_block, stride, act_func, use_se, self.ks_list, self.expand_ratio,
+                                   feature_dim)
 
                 ofa_layer_list = []
                 for ks, er in product(self.ks_list, self.expand_ratio):
                     ofa_layer_list.append(OFALayer(ofa_conv, ks, er))
 
-                self.edges([start_node+i, start_node+i+1]).set("op", ofa_layer_list)
+                self.edges[start_node+i, start_node+i+1].set("op", ofa_layer_list)
+                self._set_op_indice(self.edges[start_node+i, start_node+i+1], 8)
 
                 feature_dim = output_channel
 
@@ -143,16 +146,20 @@ class OnceForAllSearchSpace(Graph):
         # depth layers: identity and zero
         for i in self.depth_nodes:
             for j in range(1, 4):
-                self.edges([i - j, i]).set(
+                self.edges[i - j, i].set(
                     "op",
                     [
                         ops.Identity(),
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
+                if j == 4:  # TODO move this from init to sample architecutre or to set max function similiar to darts
+                    self._set_op_indice(self.edges[i - j, i], 0)
+                else:
+                    self._set_op_indice(self.edges[i - j, i], 1)
 
         # edges between blocks
         for i in self.depth_nodes[:-1]:
-            self.edges([i, i + 1]).set("op", ops.Identity())
+            self.edges[i, i + 1].set("op", ops.Identity())
 
         # set bn param
         # TODO this doesnt work iterate all modules and call this function
@@ -164,10 +171,30 @@ class OnceForAllSearchSpace(Graph):
         # TODO fix if needed dont know what it does
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
-
     def mutate(self):
         pass
 
-    def sample_random_architecture(self, dataset_api):
-        pass
+    def sample_random_architecture(self, dataset_api=None):
+        for start_node, n_block in zip(
+                self.block_start_nodes,
+                [4] * 5,
+        ):
+            for i in range(n_block):
+                self._set_op_indice(self.edges[start_node + i, start_node + i + 1], np.random.choice(np.arange(9)))
 
+        for i in self.depth_nodes:
+            for j in range(1, 4):
+                self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
+            d = np.random.choice([1, 2, 3])
+            self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+
+    def _set_op_indice(self, edge, index):
+        # function that replaces list of ops or current ops with the index give!
+        edge.set("op_index", index)
+        if isinstance(edge.op, list):
+            primitives = edge.op
+        else:
+            primitives = edge.primitives
+
+        edge.set("op", primitives[edge.op_index])
+        edge.set("primitives", primitives)  # store for later use
