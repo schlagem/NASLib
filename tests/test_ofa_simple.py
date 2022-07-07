@@ -51,11 +51,17 @@ class TestOFASearchSpace(unittest.TestCase):
     def generate_ds(self):
         ds = {}
         i = 0
-        for j in range(1 + self.search_space.offset, self.search_space.number_of_units + self.search_space.offset + 1):
-            block = self.search_space.edges[j, j + 1].op
+        for d_node, start_node in zip(self.search_space.depth_nodes, self.search_space.block_start_nodes):
+            depth = 0
+            for j in range(1, 4):
+                if not self.search_space.edges[d_node - j, d_node].op_index:
+                    depth = 5 - j
+            if depth not in [2, 3, 4]:
+                raise ValueError(f"Depth {depth} not in valid range {[2, 3, 4]}")
             b_state = []
-            for layer in block.blocks[:block.depth]:
-                layer_state = [layer.conv.active_kernel_size, layer.conv.active_expand_ratio]
+            for n in range(depth):
+                layer = self.search_space.edges[start_node + n, start_node + n + 1].op
+                layer_state = [layer.active_kernel_size, layer.active_expand_ratio]
                 b_state.append(layer_state)
             ds[i] = b_state
             i += 1
@@ -66,7 +72,6 @@ class TestOFASearchSpace(unittest.TestCase):
         Test that mutation always changes exactly one property
         generate data structure to comapre can be maybe moved to search space (somewhat like identyfying hash)
         """
-        raise NotImplementedError
         for i in range(1000):
             state = self.generate_ds()
             self.search_space.mutate()

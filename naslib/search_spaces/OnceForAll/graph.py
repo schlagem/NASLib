@@ -50,7 +50,7 @@ class OnceForAllSearchSpace(Graph):
         )
 
         self.ks_list = [3, 5, 7]
-        self.expand_ratio = [3, 4, 6]
+        self.expand_ratio_list = [3, 4, 6]
         self.depth_list = [2, 3, 4]
 
         stride_stages = [1, 2, 2, 2, 1, 2]
@@ -127,11 +127,11 @@ class OnceForAllSearchSpace(Graph):
                     stride = s
                 else:
                     stride = 1
-                ofa_conv = OFAConv(width, n_block, stride, act_func, use_se, self.ks_list, self.expand_ratio,
+                ofa_conv = OFAConv(width, n_block, stride, act_func, use_se, self.ks_list, max(self.expand_ratio_list),
                                    feature_dim)
 
                 ofa_layer_list = []
-                for ks, er in product(self.ks_list, self.expand_ratio):
+                for ks, er in product(self.ks_list, self.expand_ratio_list):
                     ofa_layer_list.append(OFALayer(ofa_conv, ks, er))
 
                 self.edges[start_node+i, start_node+i+1].set("op", ofa_layer_list)
@@ -152,8 +152,8 @@ class OnceForAllSearchSpace(Graph):
                         ops.Identity(),
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
-                if j == 4:  # TODO move this from init to sample architecutre or to set max function similiar to darts
-                    self._set_op_indice(self.edges[i - j, i], 0)
+                if j == 1:  # TODO move this from init to sample architecutre or to set max function similiar to darts
+                    self._set_op_indice(self.edges[i - j, i], 0)  # TOOD cahnge to max depth
                 else:
                     self._set_op_indice(self.edges[i - j, i], 1)
 
@@ -172,7 +172,34 @@ class OnceForAllSearchSpace(Graph):
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     def mutate(self):
-        pass
+        mutation = np.random.choice(["depth", "kernel", "expand"])
+        if mutation == "depth":
+            i = np.random.choice(self.depth_nodes)
+            current = 0
+            for j in range(1, 4):
+                if not self.edges[i - j, i].op_index:
+                    current = j
+                self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
+            d = np.random.choice([n for n in [1, 2, 3] if n != current])
+            self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+        elif mutation == "kernel" or mutation == "expand":
+            ind = np.random.choice(np.arange(len(self.block_start_nodes)))
+            start_block = self.block_start_nodes[ind]
+            depth = 0
+            for j in range(1, 4):
+                if not self.edges[self.depth_nodes[ind] - j, self.depth_nodes[ind]].op_index:
+                    depth = 5 - j
+            mutate_ind = np.random.choice(np.arange(depth))
+            layer = self.edges[start_block + mutate_ind, start_block + mutate_ind + 1]
+            ks, er = layer.op.active_kernel_size, layer.op.active_expand_ratio
+            if mutation == "kernel":
+                ks = np.random.choice([k for k in self.ks_list if k != ks])
+            elif mutation == "expand":
+                er = np.random.choice([e for e in self.expand_ratio_list if e != er])
+            op_index = self.ks_list.index(ks) * len(self.ks_list) + self.expand_ratio_list.index(er)
+            self._set_op_indice(layer, op_index)
+        else:
+            raise ValueError(f"Mutation type: {mutation} not found")
 
     def sample_random_architecture(self, dataset_api=None):
         for start_node, n_block in zip(
