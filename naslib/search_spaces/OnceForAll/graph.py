@@ -200,20 +200,36 @@ class OnceForAllSearchSpace(Graph):
             self._set_op_indice(layer, op_index)
         else:
             raise ValueError(f"Mutation type: {mutation} not found")
+    
+    def load_op_from_config(self):
+        # TODO
+        pass
 
-    def sample_random_architecture(self, dataset_api=None):
-        for start_node, n_block in zip(
+    def set_op_indices(self, op_indices):
+        # This will update the edges in the OnceForAllSearchSpace object to op_indices
+        # op_indices: [ 20 entries between 0 and 8 & 5 entries between 1 and 3]
+        for start_node, n_block, j in zip(
                 self.block_start_nodes,
                 [4] * 5,
+                range(5),
         ):
             for i in range(n_block):
-                self._set_op_indice(self.edges[start_node + i, start_node + i + 1], np.random.choice(np.arange(9)))
+                index = op_indices[j * 5 + i]
+                self._set_op_indice(self.edges[start_node + i, start_node + i + 1], index)
 
-        for i in self.depth_nodes:
+        for index, i in enumerate(self.depth_nodes):
             for j in range(1, 4):
                 self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
-            d = np.random.choice([1, 2, 3])
+            #d = np.random.choice([1, 2, 3])
+            d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+
+    def sample_random_architecture(self, dataset_api=None):
+        # get random op_indices
+        op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1,4, size=5)))
+        # set op indices
+        self.set_op_indices(op_indices)
+
 
     def _set_op_indice(self, edge, index):
         # function that replaces list of ops or current ops with the index give!
