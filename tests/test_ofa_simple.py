@@ -110,38 +110,26 @@ class TestOFASearchSpace(unittest.TestCase):
             self.search_space.sample_random_architecture()
 
     def test_forward_correctness(self):
-        raise NotImplementedError
         # requires loading weights
         self.search_space._set_weights()
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
-        for i in range(1):
+        with torch.no_grad():
             x = torch.rand((3, 3, 3, 3))
             y_graph = self.search_space.forward(x)
             y_ofa = ofa_network(x)
             self.assertTrue(torch.equal(y_graph, y_ofa))
 
     def test_weights(self):
-        raise NotImplementedError
-        # TODO reimplement it
         self.search_space._set_weights()
-        state = self.search_space.state_dict()
-        print(list(state.keys())[:18])
-        a = list(state.keys())[:18]
-        # print(list(state.keys())[-9:])
+        ss_dict = self.search_space._state_dict()
 
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
-        dic = ofa_network.state_dict()
-        b = list(dic.keys())[:18]
+        ofa_dict = ofa_network.state_dict()
 
-        # self.assertTrue([state[x] for x in a], [dic[x] for x in b])
-        print(list(dic.keys())[:18])
-        # print(list(dic.keys())[-9:])
-
-        for search_space_value, ofa_value in zip(state, dic):
-            print((type(search_space_value), type(ofa_value)))
-            self.assertTrue(torch.equal(state[search_space_value], dic[ofa_value]))
+        for search_space_value, ofa_value in zip(ss_dict, ofa_dict):
+            self.assertTrue(torch.equal(ss_dict[search_space_value], ofa_dict[ofa_value]))
 
     def test_query(self):
         # TODO maybe test accuracy

@@ -175,3 +175,9 @@ class OFALayer(AbstractPrimitive):
     def get_embedded_ops(self):
         pass
 
+    def set_weights(self, block_state_dict):
+        assert self.ofa_conv.res_block.state_dict().keys() == block_state_dict.keys()
+        assert len(self.ofa_conv.res_block.state_dict().keys()) == len(block_state_dict.keys())
+        self.ofa_conv.res_block.load_state_dict(block_state_dict)
+
+

@@ -152,8 +152,8 @@ class OnceForAllSearchSpace(Graph):
                         ops.Identity(),
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
-                if j == 1:  # TODO move this from init to sample architecutre or to set max function similiar to darts
-                    self._set_op_indice(self.edges[i - j, i], 0)  # TOOD cahnge to max depth
+                if j == 1:  # TODO move this from init to sample architecture or to set max function similar to darts
+                    self._set_op_indice(self.edges[i - j, i], 0)  # TODO change to max depth
                 else:
                     self._set_op_indice(self.edges[i - j, i], 1)
 
@@ -225,3 +225,62 @@ class OnceForAllSearchSpace(Graph):
 
         edge.set("op", primitives[edge.op_index])
         edge.set("primitives", primitives)  # store for later use
+
+    def _set_weights(self):
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        url_base = "https://hanlab.mit.edu/files/OnceForAll/ofa_nets/"
+        init = torch.load(
+            download_url(url_base + net_id, model_dir=".torch/ofa_nets"),
+            map_location="cpu",
+        )["state_dict"]
+        keys = init.keys()
+
+        # for k in keys:
+        #     print(k)
+        #
+        # for e in self.edges:
+        #     block = self.edges[e].op
+        #     print(f'{e}: {block}')
+
+        first_unit = self.edges[1, 2].op
+        first_conv_state = OrderedDict((k.replace("first_conv.", ""), init[k]) for k in keys if "first_conv" in k)
+        first_block_state = OrderedDict((k.replace("blocks.0.mobile_inverted_conv", "conv"), init[k]) for k in keys
+                                        if "blocks.0" in k)
+        first_unit.set_weights(first_conv_state, first_block_state)
+
+        block_idx = 1
+        for e in self.edges:
+            block = self.edges[e].op
+            if type(block) != OFALayer:
+                continue
+            block_dict = OrderedDict((k.replace("blocks." + str(block_idx) + ".mobile_inverted_conv", "conv"),
+                                      init[k]) for k in keys if "blocks." + str(block_idx) + "." in k)
+            block.set_weights(block_dict)
+            block_idx += 1
+
+        final = list(self.edges)[-1]
+        final_unit = self.edges[final].op
+        final_expand_dict = OrderedDict((k.replace("final_expand_layer.", ""), init[k]) for k in keys
+                                        if "final_expand_layer." in k)
+        feature_mix_dict = OrderedDict((k.replace("feature_mix_layer.", ""), init[k]) for k in keys
+                                       if "feature_mix_layer." in k)
+        classifier_dict = OrderedDict((k.replace("classifier.", ""), init[k]) for k in keys
+                                      if "classifier." in k)
+        final_unit.set_weights(final_expand_dict, feature_mix_dict, classifier_dict)
+
+    def _state_dict(self):
+        ord_dict = OrderedDict()
+        block_idx = 1
+        for e in self.edges:
+            block = self.edges[e].op
+            if type(block) in [ops.Identity, ops.Zero]:
+                continue
+            if type(block) == OFALayer:
+                state = block.ofa_conv.res_block.state_dict()
+                out = OrderedDict((k.replace("conv", "block" + str(block_idx)),
+                                   state[k]) for k in state.keys())
+                ord_dict.update(out)
+                block_idx += 1
+            else:
+                ord_dict.update(block.state_dict())
+        return ord_dict
