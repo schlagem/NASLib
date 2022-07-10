@@ -114,11 +114,13 @@ class TestOFASearchSpace(unittest.TestCase):
         self.search_space._set_weights()
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
-        with torch.no_grad():
-            x = torch.rand((3, 3, 3, 3))
-            y_graph = self.search_space.forward(x)
-            y_ofa = ofa_network(x)
-            self.assertTrue(torch.equal(y_graph, y_ofa))
+        for i in range(10):
+            # TODO sample random, set ofa accrodingly and then compare results
+            with torch.no_grad():
+                x = torch.rand((3, 3, 3, 3))
+                y_graph = self.search_space.forward(x)
+                y_ofa = ofa_network(x)
+                self.assertTrue(torch.equal(y_graph, y_ofa))
 
     def test_weights(self):
         self.search_space._set_weights()
@@ -127,7 +129,7 @@ class TestOFASearchSpace(unittest.TestCase):
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
         ofa_dict = ofa_network.state_dict()
-
+        self.assertTrue(len(ofa_dict.values()) == len(ss_dict))
         for search_space_value, ofa_value in zip(ss_dict, ofa_dict):
             self.assertTrue(torch.equal(ss_dict[search_space_value], ofa_dict[ofa_value]))
 

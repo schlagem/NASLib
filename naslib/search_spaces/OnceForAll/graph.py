@@ -28,7 +28,8 @@ class OnceForAllSearchSpace(Graph):
         # we don't call the search space with params thus we define them here
         # for our application this should suffice
         n_classes = 1000  # ImageNet
-        dropout_rate = 0.1  # default Paremeter TODO check if better value
+        dropout_rate = 0  # default Paremeter TODO check if better value
+        # TODO droput when using pretrained is zero
         bn_param = (0.1, 1e-5)  # TODO check where this is used
 
         self.width_mult = 1.0
