@@ -1,20 +1,29 @@
 # naslib imports
+import os.path
+
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
-from naslib.search_spaces.core.graph import Graph, EdgeData
+from naslib.search_spaces.core.graph import Graph
 from naslib.search_spaces.core.query_metrics import Metric
 from naslib.search_spaces.core import primitives as ops
 from naslib.utils.utils import load_config
 
 # Once for all imports
-from ofa.utils import make_divisible, val2list, MyNetwork
 from ofa.utils import download_url
-from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
+from ofa.utils import MyNetwork, make_divisible
+
+from ofa.model_zoo import ofa_net
 
 # other imports
 import numpy as np
 import torch
 from itertools import product
 from collections import OrderedDict
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+import torch.nn as nn
+from naslib.utils.utils import AverageMeter
+from tqdm import tqdm
+import math
 
 
 class OnceForAllSearchSpace(Graph):
@@ -22,6 +31,7 @@ class OnceForAllSearchSpace(Graph):
     Implementation of the Once for All Search space.
     """
     QUERYABLE = True
+    DEFAULT_IMAGENET_PATH = None
 
     def __init__(self):
         super().__init__()
@@ -29,7 +39,8 @@ class OnceForAllSearchSpace(Graph):
         # we don't call the search space with params thus we define them here
         # for our application this should suffice
         n_classes = 1000  # ImageNet
-        dropout_rate = 0.1  # default Paremeter TODO check if better value
+        dropout_rate = 0  # default Parameter TODO check if better value
+        # TODO dropout when using pretrained is zero
         bn_param = (0.1, 1e-5)  # TODO check where this is used
 
         self.width_mult = 1.0
@@ -84,11 +95,11 @@ class OnceForAllSearchSpace(Graph):
         self.add_edges_from([(1, 2), (31, 32)])
 
         # edges between blocks, always identity
-        self.add_edges_from([(i, i+1) for i in self.depth_nodes[:-1]])
+        self.add_edges_from([(i, i + 1) for i in self.depth_nodes[:-1]])
 
         # intermediate edges
         for i in self.block_start_nodes:
-            self.add_edges_from([(i+k, i+k+1) for k in range(4)])
+            self.add_edges_from([(i + k, i + k + 1) for k in range(4)])
 
         # edges different depths
         self.add_edges_from([(i - 3, i) for i in self.depth_nodes])
@@ -107,12 +118,12 @@ class OnceForAllSearchSpace(Graph):
         feature_dim = first_block_dim
 
         for start_node, width, n_block, s, act_func, use_se in zip(
-            self.block_start_nodes,
-            width_list[2:],
-            n_block_list[1:],
-            stride_stages[1:],
-            act_stages[1:],
-            se_stages[1:],
+                self.block_start_nodes,
+                width_list[2:],
+                n_block_list[1:],
+                stride_stages[1:],
+                act_stages[1:],
+                se_stages[1:],
         ):
             output_channel = width
             # make an OFA layer object for all 9 edges cause of weight sharing?
@@ -128,8 +139,8 @@ class OnceForAllSearchSpace(Graph):
                 for ks, er in product(self.ks_list, self.expand_ratio_list):
                     ofa_layer_list.append(OFALayer(ofa_conv, ks, er))
 
-                self.edges[start_node+i, start_node+i+1].set("op", ofa_layer_list)
-                self._set_op_indice(self.edges[start_node+i, start_node+i+1], 8)
+                self.edges[start_node + i, start_node + i + 1].set("op", ofa_layer_list)
+                self._set_op_indice(self.edges[start_node + i, start_node + i + 1], 8)
 
                 feature_dim = output_channel
 
@@ -146,8 +157,8 @@ class OnceForAllSearchSpace(Graph):
                         ops.Identity(),
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
-                if j == 1:  # TODO move this from init to sample architecutre or to set max function similiar to darts
-                    self._set_op_indice(self.edges[i - j, i], 0)  # TOOD cahnge to max depth
+                if j == 1:  # TODO move this from init to sample architecture or to set max function similar to darts
+                    self._set_op_indice(self.edges[i - j, i], 0)  # TODO change to max depth
                 else:
                     self._set_op_indice(self.edges[i - j, i], 1)
 
@@ -259,6 +270,7 @@ class OnceForAllSearchSpace(Graph):
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
 
+<<<<<<< HEAD
     def sample_random_architecture(self, dataset_api=None):
         # get random op_indices
         op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1, 4, size=5)))
@@ -266,6 +278,10 @@ class OnceForAllSearchSpace(Graph):
         self.set_op_indices(op_indices)
 
     def _set_op_indice(self, edge, index):
+=======
+    @staticmethod
+    def _set_op_indice(edge, index):
+>>>>>>> bf63f57e68ca9d4e505169cd77980a7c6dd2cc60
         # function that replaces list of ops or current ops with the index give!
         edge.set("op_index", index)
         if isinstance(edge.op, list):
@@ -275,3 +291,139 @@ class OnceForAllSearchSpace(Graph):
 
         edge.set("op", primitives[edge.op_index])
         edge.set("primitives", primitives)  # store for later use
+<<<<<<< HEAD
+=======
+
+    def _set_weights(self):
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        url_base = "https://hanlab.mit.edu/files/OnceForAll/ofa_nets/"
+        init = torch.load(
+            download_url(url_base + net_id, model_dir=".torch/ofa_nets"),
+            map_location="cpu",
+        )["state_dict"]
+        keys = init.keys()
+
+        first_unit = self.edges[1, 2].op
+        first_conv_state = OrderedDict((k.replace("first_conv.", ""), init[k]) for k in keys if "first_conv" in k)
+        first_block_state = OrderedDict((k.replace("blocks.0.mobile_inverted_conv", "conv"), init[k]) for k in keys
+                                        if "blocks.0" in k)
+        first_unit.set_weights(first_conv_state, first_block_state)
+
+        block_idx = 1
+        for e in self.edges:
+            block = self.edges[e].op
+            if not isinstance(block, OFALayer):
+                continue
+            block_dict = OrderedDict((k.replace("blocks." + str(block_idx) + ".mobile_inverted_conv", "conv"),
+                                      init[k]) for k in keys if "blocks." + str(block_idx) + "." in k)
+            block.set_weights(block_dict)
+            block_idx += 1
+
+        final = list(self.edges)[-1]
+        final_unit = self.edges[final].op
+        final_expand_dict = OrderedDict((k.replace("final_expand_layer.", ""), init[k]) for k in keys
+                                        if "final_expand_layer." in k)
+        feature_mix_dict = OrderedDict((k.replace("feature_mix_layer.", ""), init[k]) for k in keys
+                                       if "feature_mix_layer." in k)
+        classifier_dict = OrderedDict((k.replace("classifier.", ""), init[k]) for k in keys
+                                      if "classifier." in k)
+        final_unit.set_weights(final_expand_dict, feature_mix_dict, classifier_dict)
+
+    def _state_dict(self):
+        ord_dict = OrderedDict()
+        block_idx = 1
+        for e in self.edges:
+            block = self.edges[e].op
+            if type(block) in [ops.Identity, ops.Zero]:
+                continue
+            if isinstance(block, OFALayer):
+                state = block.ofa_conv.res_block.state_dict()
+                out = OrderedDict((k.replace("conv", "block" + str(block_idx)),
+                                   state[k]) for k in state.keys())
+                ord_dict.update(out)
+                block_idx += 1
+            else:
+                ord_dict.update(block.state_dict())
+        return ord_dict
+
+    def query(
+            self,
+            metric: Metric,
+            dataset: str,
+            path: str) -> float:
+
+        assert metric in [Metric.VAL_ACCURACY, Metric.TEST_ACCURACY]
+
+        d, ks, e = self.get_active_config()
+
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        ofa_network = ofa_net(net_id, pretrained=True)
+        ofa_network.set_active_subnet(ks=ks, e=e, d=d)
+        manual_subnet = ofa_network.get_active_subnet(preserve_weight=True)
+        return self._eval_pretrained_ofa(manual_subnet, metric)
+
+    def _eval_pretrained_ofa(self, net, metric: Metric, path='~/dataset/imagenet/'):
+        if self.DEFAULT_IMAGENET_PATH:
+            path = self.DEFAULT_IMAGENET_PATH
+        if metric == Metric.VAL_ACCURACY:
+            metric = 'val'
+        else:
+            metric = 'test'
+        data_path = os.path.join(path, metric)
+        imagenet_data = datasets.ImageFolder(
+            data_path,
+            self._ofa_transform()
+        )
+        data_loader = torch.utils.data.DataLoader(
+            imagenet_data,
+            batch_size=256,  # ~5GB
+            shuffle=False,
+            pin_memory=True
+        )
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        net.eval()
+        net.to(device)
+        criterion = nn.CrossEntropyLoss()
+        losses = AverageMeter()
+        correct = 0
+        total = len(data_loader.dataset)
+        with torch.no_grad():
+            for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
+                images, labels = images.to(device), labels.to(device)
+                output = net(images)
+                loss = criterion(output, labels)
+                _, predicted = torch.max(output.data, 1)
+                correct += (predicted == labels).sum().item()
+                losses.update(loss.item())
+        accuracy = correct / total
+        return accuracy
+
+    @staticmethod
+    def _ofa_transform(image_size=None):
+        if image_size is None:
+            image_size = 224
+        normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )
+        return transforms.Compose([
+            transforms.Resize(int(math.ceil(image_size / 0.875))),
+            transforms.CenterCrop(image_size),
+            transforms.ToTensor(),
+            normalize]
+        )
+
+    def get_active_config(self):
+        d, k, e = [], [], []
+        for d_node, start_node in zip(self.depth_nodes, self.block_start_nodes):
+            depth = 0
+            for j in range(1, 4):
+                if not self.edges[d_node - j, d_node].op_index:
+                    depth = 5 - j
+            d.append(depth)
+            for n in range(4):
+                layer = self.edges[start_node + n, start_node + n + 1].op
+                kernel, expand = layer.active_kernel_size, layer.active_expand_ratio
+                k.append(kernel)
+                e.append(expand)
+        return d, k, e
+>>>>>>> bf63f57e68ca9d4e505169cd77980a7c6dd2cc60
