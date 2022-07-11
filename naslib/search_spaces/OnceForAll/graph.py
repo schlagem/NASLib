@@ -1,4 +1,6 @@
 # naslib imports
+import os.path
+
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
 from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
@@ -9,11 +11,22 @@ from ofa.utils import make_divisible, val2list, MyNetwork
 from ofa.utils import download_url
 from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
 
+from ofa.imagenet_classification.data_providers.imagenet import ImagenetDataProvider
+from ofa.imagenet_classification.run_manager import ImagenetRunConfig, RunManager
+from ofa.model_zoo import ofa_net
+
 # other imports
 import numpy as np
 import torch
 from itertools import product
 from collections import OrderedDict
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+import torch.nn as nn
+from naslib.utils.utils import AverageMeter
+from tqdm import tqdm
+import math
+
 
 
 class OnceForAllSearchSpace(Graph):
@@ -21,6 +34,7 @@ class OnceForAllSearchSpace(Graph):
     Implementation of the Once for All Search space.
     """
     QUERYABLE = True
+    DEFAULT_IMAGENET_PATH = None
 
     def __init__(self):
         super().__init__()
@@ -28,8 +42,8 @@ class OnceForAllSearchSpace(Graph):
         # we don't call the search space with params thus we define them here
         # for our application this should suffice
         n_classes = 1000  # ImageNet
-        dropout_rate = 0  # default Paremeter TODO check if better value
-        # TODO droput when using pretrained is zero
+        dropout_rate = 0  # default Parameter TODO check if better value
+        # TODO drooput when using pretrained is zero
         bn_param = (0.1, 1e-5)  # TODO check where this is used
 
         self.width_mult = 1.0
@@ -40,6 +54,12 @@ class OnceForAllSearchSpace(Graph):
         self.ks_list.sort()
         self.expand_ratio_list.sort()
         self.depth_list.sort()
+
+        self.config = {
+            'ks': [7, 7, 7, 7, 7],
+            'd': [4, 4, 4, 4, 4],
+            'e': [6, 6, 6, 6, 6]
+        }
 
         base_stage_width = [16, 16, 24, 40, 80, 112, 160, 960, 1280]
 
@@ -91,11 +111,11 @@ class OnceForAllSearchSpace(Graph):
         self.add_edges_from([(1, 2), (31, 32)])
 
         # edges between blocks, always identity
-        self.add_edges_from([(i, i+1) for i in self.depth_nodes[:-1]])
+        self.add_edges_from([(i, i + 1) for i in self.depth_nodes[:-1]])
 
         # intermediate edges
         for i in self.block_start_nodes:
-            self.add_edges_from([(i+k, i+k+1) for k in range(4)])
+            self.add_edges_from([(i + k, i + k + 1) for k in range(4)])
 
         # edges different depths
         self.add_edges_from([(i - 3, i) for i in self.depth_nodes])
@@ -114,12 +134,12 @@ class OnceForAllSearchSpace(Graph):
         feature_dim = first_block_dim
 
         for start_node, width, n_block, s, act_func, use_se in zip(
-            self.block_start_nodes,
-            width_list[2:],
-            n_block_list[1:],
-            stride_stages[1:],
-            act_stages[1:],
-            se_stages[1:],
+                self.block_start_nodes,
+                width_list[2:],
+                n_block_list[1:],
+                stride_stages[1:],
+                act_stages[1:],
+                se_stages[1:],
         ):
             output_channel = width
             # make an OFA layer object for all 9 edges cause of weight sharing?
@@ -135,8 +155,8 @@ class OnceForAllSearchSpace(Graph):
                 for ks, er in product(self.ks_list, self.expand_ratio_list):
                     ofa_layer_list.append(OFALayer(ofa_conv, ks, er))
 
-                self.edges[start_node+i, start_node+i+1].set("op", ofa_layer_list)
-                self._set_op_indice(self.edges[start_node+i, start_node+i+1], 8)
+                self.edges[start_node + i, start_node + i + 1].set("op", ofa_layer_list)
+                self._set_op_indice(self.edges[start_node + i, start_node + i + 1], 8)
 
                 feature_dim = output_channel
 
@@ -195,8 +215,14 @@ class OnceForAllSearchSpace(Graph):
             ks, er = layer.op.active_kernel_size, layer.op.active_expand_ratio
             if mutation == "kernel":
                 ks = np.random.choice([k for k in self.ks_list if k != ks])
+                temp = self.config['d']
+                temp[ind] = ks
+                self.config['d'] = temp
             elif mutation == "expand":
                 er = np.random.choice([e for e in self.expand_ratio_list if e != er])
+                temp = self.config['e']
+                temp[ind] = er
+                self.config['e'] = temp
             op_index = self.ks_list.index(ks) * len(self.ks_list) + self.expand_ratio_list.index(er)
             self._set_op_indice(layer, op_index)
         else:
@@ -210,11 +236,14 @@ class OnceForAllSearchSpace(Graph):
             for i in range(n_block):
                 self._set_op_indice(self.edges[start_node + i, start_node + i + 1], np.random.choice(np.arange(9)))
 
+        new_d = []
         for i in self.depth_nodes:
             for j in range(1, 4):
                 self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
             d = np.random.choice([1, 2, 3])
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+            new_d.append(d + 1)
+        self.config['depth'] = new_d
 
     def _set_op_indice(self, edge, index):
         # function that replaces list of ops or current ops with the index give!
@@ -285,3 +314,71 @@ class OnceForAllSearchSpace(Graph):
             else:
                 ord_dict.update(block.state_dict())
         return ord_dict
+
+    def query(
+            self,
+            metric: Metric,
+            dataset: str,
+            path: str) -> float:
+        assert metric in [
+            Metric.VAL_ACCURACY,
+            Metric.TEST_ACCURACY,
+        ]
+        ks = self.config['ks']
+        e = self.config['e']
+        d = self.config['d']
+
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        ofa_network = ofa_net(net_id, pretrained=True)
+        ofa_network.set_active_subnet(ks=ks, e=e, d=d)
+        manual_subnet = ofa_network.get_active_subnet(preserve_weight=True)
+        return self._eval_pretrained_ofa(manual_subnet, metric)
+
+    def _eval_pretrained_ofa(self, net, metric: Metric, path='~/dataset/imagenet/'):
+        if self.DEFAULT_IMAGENET_PATH:
+            path = self.DEFAULT_IMAGENET_PATH
+        if metric == Metric.VAL_ACCURACY:
+            metric = 'val'
+        else:
+            metric = 'test'
+        data_path = os.path.join(path, metric)
+        imagenet_data = datasets.ImageFolder(
+            data_path,
+            self._ofa_transform()
+        )
+        data_loader = torch.utils.data.DataLoader(
+            imagenet_data,
+            batch_size=256,  # ~5GB
+            shuffle=False,
+            pin_memory=True
+        )
+        net.eval()
+        net.cuda()
+        criterion = nn.CrossEntropyLoss()
+        losses = AverageMeter()
+        correct = 0
+        total = len(data_loader.dataset)
+        with torch.no_grad():
+            for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
+                images, labels = images.cuda(), labels.cuda()
+                output = net(images)
+                loss = criterion(output, labels)
+                _, predicted = torch.max(output.data, 1)
+                correct += (predicted == labels).sum().item()
+                losses.update(loss.item())
+        accuracy = 100 * correct / total
+        return accuracy
+
+    @staticmethod
+    def _ofa_transform(image_size=None):
+        if image_size is None:
+            image_size = 224
+        normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )
+        return transforms.Compose([
+            transforms.Resize(int(math.ceil(image_size / 0.875))),
+            transforms.CenterCrop(image_size),
+            transforms.ToTensor(),
+            normalize]
+        )

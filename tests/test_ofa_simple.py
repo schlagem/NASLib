@@ -113,7 +113,6 @@ class TestOFASearchSpace(unittest.TestCase):
                 for j in range(1, 4):
                     active_op.append(self.search_space.edges[d - j, d].op_index)  # set all zero
                 unique, counts = np.unique(active_op, return_counts=True)
-                print(unique, counts)
                 self.assertTrue((unique == [0, 1]).all())
                 self.assertTrue((counts == [1, 2]).all())
 
@@ -130,7 +129,7 @@ class TestOFASearchSpace(unittest.TestCase):
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
         for i in range(50):
-            # TODO sample random, set ofa accrodingly and then compare results
+            # TODO sample random, set ofa accordingly and then compare results
             with torch.no_grad():
                 x = torch.rand((3, 3, 3, 3))
                 y_graph = self.search_space.forward(x)
@@ -150,11 +149,6 @@ class TestOFASearchSpace(unittest.TestCase):
         self.assertTrue(len(ofa_dict.values()) == len(ss_dict))
         for search_space_value, ofa_value in zip(ss_dict, ofa_dict):
             self.assertTrue(torch.equal(ss_dict[search_space_value], ofa_dict[ofa_value]))
-
-    def test_query(self):
-        # TODO maybe test accuracy
-        raise NotImplementedError
-        self.search_space._set_weights()
 
 
 if __name__ == '__main__':
