@@ -139,6 +139,23 @@ class TestOFASearchSpace(unittest.TestCase):
                 depths, k, e = self.generate_active_net()
                 ofa_network.set_active_subnet(ks=k, e=e, d=depths)
 
+    def test_forward_correctness_eval(self):
+        # requires loading weights
+        self.search_space._set_weights()
+        self.search_space.eval()
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        ofa_network = ofa_net(net_id, pretrained=True)
+        ofa_network.eval()
+        for i in range(50):
+            with torch.no_grad():
+                x = torch.rand((3, 3, 3, 3))
+                y_graph = self.search_space.forward(x)
+                y_ofa = ofa_network(x)
+                self.assertTrue(torch.equal(y_graph, y_ofa))
+                self.search_space.sample_random_architecture()
+                depths, k, e = self.generate_active_net()
+                ofa_network.set_active_subnet(ks=k, e=e, d=depths)
+
     def test_weights(self):
         self.search_space._set_weights()
         ss_dict = self.search_space._state_dict()

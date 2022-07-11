@@ -286,8 +286,8 @@ class OnceForAllSearchSpace(Graph):
     def query(
             self,
             metric: Metric,
-            dataset: str,
-            path: str) -> float:
+            dataset: str = None,
+            path: str = None) -> float:
 
         assert metric in [Metric.VAL_ACCURACY, Metric.TEST_ACCURACY]
 
@@ -318,7 +318,7 @@ class OnceForAllSearchSpace(Graph):
             pin_memory=True
         )
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        net.eval()
+        # net.eval()
         net.to(device)
         criterion = nn.CrossEntropyLoss()
         losses = AverageMeter()
@@ -332,6 +332,37 @@ class OnceForAllSearchSpace(Graph):
                 _, predicted = torch.max(output.data, 1)
                 correct += (predicted == labels).sum().item()
                 losses.update(loss.item())
+        accuracy = correct / total
+        return accuracy
+
+    def _eval_graph(self, metric: Metric, path='~/dataset/imagenet/'):
+        if self.DEFAULT_IMAGENET_PATH:
+            path = self.DEFAULT_IMAGENET_PATH
+        if metric == Metric.VAL_ACCURACY:
+            metric = 'val'
+        else:
+            metric = 'test'
+        data_path = os.path.join(path, metric)
+        imagenet_data = datasets.ImageFolder(
+            data_path,
+            self._ofa_transform()
+        )
+        data_loader = torch.utils.data.DataLoader(
+            imagenet_data,
+            batch_size=256,  # ~5GB
+            shuffle=False,
+            pin_memory=True
+        )
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        correct = 0
+        total = len(data_loader.dataset)
+        self.move_graph_to_device(device)  # TODO
+        with torch.no_grad():
+            for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
+                images, labels = images.to(device), labels.to(device)
+                output = self.forward(images)
+                _, predicted = torch.max(output.data, 1)
+                correct += (predicted == labels).sum().item()
         accuracy = correct / total
         return accuracy
 
@@ -363,3 +394,24 @@ class OnceForAllSearchSpace(Graph):
                 k.append(kernel)
                 e.append(expand)
         return d, k, e
+
+    def move_graph_to_device(self, device):
+        for e in self.edges:
+            try:
+                self.edges[e].op.move_to(device)
+            except:
+                layer = self.edges[e].op.to(device)
+                self.edges[e].set('op', layer)
+
+    def eval(self):
+        for e in self.edges:
+            layer = self.edges[e].op
+            if isinstance(layer, FirstBlock):
+                layer.first_conv.eval()
+                layer.first_block.eval()
+            elif isinstance(layer, OFALayer):
+                layer.ofa_conv.res_block.eval()
+            elif isinstance(layer, FinalBlock):
+                layer.final_expand_layer.eval()
+                layer.feature_mix_layer.eval()
+                layer.classifier.eval()

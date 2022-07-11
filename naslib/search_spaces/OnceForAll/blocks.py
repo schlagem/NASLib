@@ -80,6 +80,10 @@ class FirstBlock(AbstractPrimitive):
     def get_embedded_ops(self):
         return None
 
+    def move_to(self, device):
+        self.first_conv = self.first_conv.to(device)
+        self.first_block = self.first_block.to(device)
+
 
 class FinalBlock(AbstractPrimitive):
 
@@ -136,6 +140,11 @@ class FinalBlock(AbstractPrimitive):
     def get_embedded_ops(self):
         return None
 
+    def move_to(self, device):
+        self.final_expand_layer = self.final_expand_layer.to(device)
+        self.feature_mix_layer = self.feature_mix_layer.to(device)
+        self.classifier = self.classifier.to(device)
+
 
 class OFAConv:
 
@@ -156,6 +165,9 @@ class OFAConv:
         else:
             shortcut = None
         self.res_block = ResidualBlock(self.mobile_inverted_conv, shortcut)
+
+    def move_to(self, device):
+        self.res_block = self.res_block.to(device)
 
 
 class OFALayer(AbstractPrimitive):
@@ -180,4 +192,6 @@ class OFALayer(AbstractPrimitive):
         assert len(self.ofa_conv.res_block.state_dict().keys()) == len(block_state_dict.keys())
         self.ofa_conv.res_block.load_state_dict(block_state_dict)
 
+    def move_to(self, device):
+        self.ofa_conv.move_to(device)
 
