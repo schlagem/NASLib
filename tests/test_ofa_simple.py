@@ -74,7 +74,6 @@ class TestOFASearchSpace(unittest.TestCase):
         self.assertEqual(self.search_space.edges[23, 24].op.active_expand_ratio, 6)
         self.assertEqual(self.search_space.edges[26, 27].op.active_expand_ratio, 6)
 
-
     def generate_ds(self):
         ds = {}
         i = 0

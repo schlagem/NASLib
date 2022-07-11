@@ -239,7 +239,6 @@ class OnceForAllSearchSpace(Graph):
 
         self.set_op_indices(op_indices)
 
-
     def set_op_indices(self, op_indices):
         # This will update the edges in the OnceForAllSearchSpace object to op_indices
         # op_indices: [ 20 entries between 0 and 8 & 5 entries between 1 and 3]
@@ -260,13 +259,11 @@ class OnceForAllSearchSpace(Graph):
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
 
-
     def sample_random_architecture(self, dataset_api=None):
         # get random op_indices
-        op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1,4, size=5)))
+        op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1, 4, size=5)))
         # set op indices
         self.set_op_indices(op_indices)
-
 
     def _set_op_indice(self, edge, index):
         # function that replaces list of ops or current ops with the index give!

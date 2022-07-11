@@ -174,4 +174,3 @@ class OFALayer(AbstractPrimitive):
 
     def get_embedded_ops(self):
         pass
-
