@@ -3,6 +3,7 @@ from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFACo
 from naslib.search_spaces.core.graph import Graph, EdgeData
 from naslib.search_spaces.core.query_metrics import Metric
 from naslib.search_spaces.core import primitives as ops
+from naslib.utils.utils import load_config
 
 # Once for all imports
 from ofa.utils import make_divisible, val2list, MyNetwork
@@ -32,13 +33,6 @@ class OnceForAllSearchSpace(Graph):
         bn_param = (0.1, 1e-5)  # TODO check where this is used
 
         self.width_mult = 1.0
-        self.ks_list = val2list(3, 1)
-        self.expand_ratio_list = val2list(6, 1)
-        self.depth_list = val2list(4, 1)
-
-        self.ks_list.sort()
-        self.expand_ratio_list.sort()
-        self.depth_list.sort()
 
         base_stage_width = [16, 16, 24, 40, 80, 112, 160, 960, 1280]
 
@@ -200,29 +194,72 @@ class OnceForAllSearchSpace(Graph):
             self._set_op_indice(layer, op_index)
         else:
             raise ValueError(f"Mutation type: {mutation} not found")
-    
-    def load_op_from_config(self):
-        # TODO
-        pass
+
+    def load_op_from_config(self, config_file_path):
+        # load operations from a config file
+        config = load_config(path=config_file_path)
+        print(f'config_kernel_size_list: {config.kernel_size_list} with size: {len(config.kernel_size_list)}')
+
+        # set op indices
+        op_indices = []
+
+        # kernel size and expansion ratio
+        for ks, er in zip(config.kernel_size_list, config.expand_ratio_list):
+            if ks == 3 and er == 3:
+                op_indices.append(0)
+            elif ks == 3 and er == 4:
+                op_indices.append(1)
+            elif ks == 3 and er == 6:
+                op_indices.append(2)
+            elif ks == 5 and er == 3:
+                op_indices.append(3)
+            elif ks == 5 and er == 4:
+                op_indices.append(4)
+            elif ks == 5 and er == 6:
+                op_indices.append(5)
+            elif ks == 7 and er == 3:
+                op_indices.append(6)
+            elif ks == 7 and er == 4:
+                op_indices.append(7)
+            elif ks == 7 and er == 6:
+                op_indices.append(8)
+            else:
+                raise ValueError(f"Combination of kernel size {ks} and expansion ratio {er} not allowed")
+
+        # depth
+        for i in config.depth_list:
+            if i == 4:
+                op_indices.append(1)
+            elif i == 3:
+                op_indices.append(2)
+            elif i == 2:
+                op_indices.append(3)
+            else:
+                raise ValueError(f"Depth {i} not allowed")
+
+        self.set_op_indices(op_indices)
+
 
     def set_op_indices(self, op_indices):
         # This will update the edges in the OnceForAllSearchSpace object to op_indices
         # op_indices: [ 20 entries between 0 and 8 & 5 entries between 1 and 3]
+        # [0]: ks=3 er=3, [1]: ks=3 er=4, [2]: ks=3 er=6, [3]: ks=5 er=3, ..., [8]: ks=7 er=6
+        # [1]: depth=4, [2]: depth=3, [3]: depth=2
         for start_node, n_block, j in zip(
                 self.block_start_nodes,
                 [4] * 5,
                 range(5),
         ):
             for i in range(n_block):
-                index = op_indices[j * 5 + i]
+                index = op_indices[j * 4 + i]
                 self._set_op_indice(self.edges[start_node + i, start_node + i + 1], index)
 
         for index, i in enumerate(self.depth_nodes):
             for j in range(1, 4):
                 self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
-            #d = np.random.choice([1, 2, 3])
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+
 
     def sample_random_architecture(self, dataset_api=None):
         # get random op_indices

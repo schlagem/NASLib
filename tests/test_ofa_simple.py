@@ -48,6 +48,33 @@ class TestOFASearchSpace(unittest.TestCase):
         utils.set_seed(1)
         self.search_space = OnceForAllSearchSpace()
 
+    def test_load_config(self):
+        self.search_space.load_op_from_config('assets/config_ofa.yaml')
+
+        # check depth
+        self.assertEqual(self.search_space.edges[4, 7].op_index, 0)
+        self.assertEqual(self.search_space.edges[5, 7].op_index, 1)
+        self.assertEqual(self.search_space.edges[6, 7].op_index, 1)
+
+        self.assertEqual(self.search_space.edges[16, 19].op_index, 1)
+        self.assertEqual(self.search_space.edges[17, 19].op_index, 1)
+        self.assertEqual(self.search_space.edges[18, 19].op_index, 0)
+
+        # check kernel size
+        self.assertEqual(self.search_space.edges[2, 3].op.active_kernel_size, 3)
+        self.assertEqual(self.search_space.edges[9, 10].op.active_kernel_size, 5)
+        self.assertEqual(self.search_space.edges[16, 17].op.active_kernel_size, 3)
+        self.assertEqual(self.search_space.edges[23, 24].op.active_kernel_size, 7)
+        self.assertEqual(self.search_space.edges[26, 27].op.active_kernel_size, 7)
+
+        # check expand ratio
+        self.assertEqual(self.search_space.edges[2, 3].op.active_expand_ratio, 3)
+        self.assertEqual(self.search_space.edges[9, 10].op.active_expand_ratio, 4)
+        self.assertEqual(self.search_space.edges[16, 17].op.active_expand_ratio, 3)
+        self.assertEqual(self.search_space.edges[23, 24].op.active_expand_ratio, 6)
+        self.assertEqual(self.search_space.edges[26, 27].op.active_expand_ratio, 6)
+
+
     def generate_ds(self):
         ds = {}
         i = 0
