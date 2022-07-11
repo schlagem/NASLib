@@ -270,14 +270,18 @@ class OnceForAllSearchSpace(Graph):
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
 
+<<<<<<< HEAD
     def sample_random_architecture(self, dataset_api=None):
         # get random op_indices
         op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1, 4, size=5)))
         # set op indices
         self.set_op_indices(op_indices)
 
+    def _set_op_indice(self, edge, index):
+=======
     @staticmethod
     def _set_op_indice(edge, index):
+>>>>>>> bf63f57e68ca9d4e505169cd77980a7c6dd2cc60
         # function that replaces list of ops or current ops with the index give!
         edge.set("op_index", index)
         if isinstance(edge.op, list):
@@ -287,6 +291,8 @@ class OnceForAllSearchSpace(Graph):
 
         edge.set("op", primitives[edge.op_index])
         edge.set("primitives", primitives)  # store for later use
+<<<<<<< HEAD
+=======
 
     def _set_weights(self):
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
@@ -420,3 +426,4 @@ class OnceForAllSearchSpace(Graph):
                 k.append(kernel)
                 e.append(expand)
         return d, k, e
+>>>>>>> bf63f57e68ca9d4e505169cd77980a7c6dd2cc60
