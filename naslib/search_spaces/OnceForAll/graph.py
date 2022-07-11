@@ -324,11 +324,10 @@ class OnceForAllSearchSpace(Graph):
         losses = AverageMeter()
         correct = 0
         total = len(data_loader.dataset)
-        self.move_to_device()
         with torch.no_grad():
             for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
                 images, labels = images.to(device), labels.to(device)
-                output = self.forward(images)
+                output = net(images)
                 loss = criterion(output, labels)
                 _, predicted = torch.max(output.data, 1)
                 correct += (predicted == labels).sum().item()
