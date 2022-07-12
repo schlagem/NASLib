@@ -158,7 +158,7 @@ class OnceForAllSearchSpace(Graph):
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
                 if j == 1:  # TODO move this from init to sample architecture or to set max function similar to darts
-                    self._set_op_indice(self.edges[i - j, i], 0)  # TODO change to max depth
+                    self._set_op_indice(self.edges[i - j, i], 0)
                 else:
                     self._set_op_indice(self.edges[i - j, i], 1)
 
@@ -434,7 +434,7 @@ class OnceForAllSearchSpace(Graph):
         for e in self.edges:
             try:
                 self.edges[e].op.move_to(device)
-            except:  # TODO make excpetion more precise
+            except AttributeError:
                 layer = self.edges[e].op.to(device)
                 self.edges[e].set('op', layer)
 
