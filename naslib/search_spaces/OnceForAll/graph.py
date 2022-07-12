@@ -1,5 +1,6 @@
 # naslib imports
 import os.path
+import time
 
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
 from naslib.search_spaces.core.graph import Graph
@@ -166,6 +167,8 @@ class OnceForAllSearchSpace(Graph):
         for i in self.depth_nodes[:-1]:
             self.edges[i, i + 1].set("op", ops.Identity())
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         # set bn param
         # TODO this doesnt work iterate all modules and call this function
         # TODO IMPLEMENT THIS FUNCTION
@@ -176,7 +179,10 @@ class OnceForAllSearchSpace(Graph):
         # TODO fix if needed dont know what it does
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
-    def mutate(self):
+    def mutate(self, parent=None):
+        if parent:
+            parent_conf = parent.get_op_indices()
+            self.set_op_indices(parent_conf)
         mutation = np.random.choice(["depth", "kernel", "expand"])
         if mutation == "depth":
             i = np.random.choice(self.depth_nodes)
@@ -209,7 +215,7 @@ class OnceForAllSearchSpace(Graph):
     def load_op_from_config(self, config_file_path):
         # load operations from a config file
         config = load_config(path=config_file_path)
-        print(f'config_kernel_size_list: {config.kernel_size_list} with size: {len(config.kernel_size_list)}')
+        # print(f'config_kernel_size_list: {config.kernel_size_list} with size: {len(config.kernel_size_list)}')
 
         # set op indices
         op_indices = []
@@ -269,6 +275,23 @@ class OnceForAllSearchSpace(Graph):
                 self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+
+    def get_op_indices(self):
+        op_indices = []
+        for start_node, n_block, j in zip(
+                self.block_start_nodes,
+                [4] * 5,
+                range(5),
+        ):
+            for i in range(n_block):
+                op_indices.append(self.edges[start_node + i, start_node + i + 1].get('op_index', 0))
+
+        for index, i in enumerate(self.depth_nodes):
+            for j in range(1, 4):
+                op = self.edges[i - j, i].get('op_index', 0)
+                if op == 0:
+                    op_indices.append(j)
+        return op_indices
 
     def sample_random_architecture(self, dataset_api=None):
         # get random op_indices
@@ -342,19 +365,39 @@ class OnceForAllSearchSpace(Graph):
 
     def query(
             self,
-            metric: Metric,
-            dataset: str = None,
-            path: str = None) -> float:
+            metric=None,
+            dataset=None,
+            path=None,
+            epoch=-1,
+            full_lc=False,
+            dataset_api=None,
+    ):
+        """
+        TODO params
+        """
 
-        assert metric in [Metric.VAL_ACCURACY, Metric.TEST_ACCURACY]
+        if metric == Metric.TRAIN_ACCURACY:
+            return -1
+        elif metric == Metric.TRAIN_LOSS:
+            return -1
+        elif metric == Metric.TRAIN_TIME:
+            return -1
+        elif metric == Metric.VAL_ACCURACY:
+            return self._eval_graph(metric)
+        elif metric == Metric.VAL_LOSS:
+            return -1
+        elif metric == Metric.VAL_TIME:
+            return -1
+        elif metric == Metric.TEST_ACCURACY:
+            return -1
+        elif metric == Metric.TEST_LOSS:
+            return -1
+        elif metric == Metric.TEST_TIME:
+            return -1
+        elif metric == Metric.RAW:
+            return -1
 
-        d, ks, e = self.get_active_config()
-
-        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
-        ofa_network = ofa_net(net_id, pretrained=True)
-        ofa_network.set_active_subnet(ks=ks, e=e, d=d)
-        manual_subnet = ofa_network.get_active_subnet(preserve_weight=True)
-        return self._eval_pretrained_ofa(manual_subnet, metric)
+        return -1
 
     def _eval_pretrained_ofa(self, net, metric: Metric, path='~/dataset/imagenet/'):
         if self.DEFAULT_IMAGENET_PATH:
@@ -375,7 +418,7 @@ class OnceForAllSearchSpace(Graph):
             pin_memory=True
         )
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        # net.eval()
+        net.eval()
         net.to(device)
         criterion = nn.CrossEntropyLoss()
         losses = AverageMeter()
@@ -392,35 +435,36 @@ class OnceForAllSearchSpace(Graph):
         accuracy = correct / total
         return accuracy
 
-    def _eval_graph(self, metric: Metric, path='~/dataset/imagenet/'):
+    def _eval_graph(self, metric: Metric, path='~/dataset/imagenet/', subset=True, subset_size=1024):
         if self.DEFAULT_IMAGENET_PATH:
             path = self.DEFAULT_IMAGENET_PATH
         if metric == Metric.VAL_ACCURACY:
             metric = 'val'
-        else:
+        elif metric == Metric.TEST_ACCURACY:
             metric = 'test'
         data_path = os.path.join(path, metric)
         imagenet_data = datasets.ImageFolder(
             data_path,
             self._ofa_transform()
         )
+        if subset:
+            imagenet_data = torch.utils.data.Subset(imagenet_data, np.random.randint(0, 50000, subset_size))
         data_loader = torch.utils.data.DataLoader(
             imagenet_data,
-            batch_size=256,  # ~5GB
+            batch_size=256,  # ~5GB on gpu memory
             shuffle=False,
             pin_memory=True
         )
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         correct = 0
         total = len(data_loader.dataset)
-        self.move_graph_to_device(device)  # TODO
+        self.move_graph_to(self.device)
         with torch.no_grad():
             for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
-                images, labels = images.to(device), labels.to(device)
+                images, labels = images.to(self.device), labels.to(self.device)
                 output = self.forward(images)
                 _, predicted = torch.max(output.data, 1)
                 correct += (predicted == labels).sum().item()
-        accuracy = correct / total
+        accuracy = correct / total * 100
         return accuracy
 
     @staticmethod
@@ -452,23 +496,55 @@ class OnceForAllSearchSpace(Graph):
                 e.append(expand)
         return d, k, e
 
-    def move_graph_to_device(self, device):
+    def move_graph_to(self, device=torch.device('cpu')):
+        """
+        Helper function, that moves the graph to a specific device
+        """
         for e in self.edges:
             try:
                 self.edges[e].op.move_to(device)
-            except:
+            except AttributeError:
                 layer = self.edges[e].op.to(device)
                 self.edges[e].set('op', layer)
 
     def eval(self):
+        """
+        Helper function, that activates eval mode for the whole graph
+        """
         for e in self.edges:
             layer = self.edges[e].op
-            if isinstance(layer, FirstBlock):
-                layer.first_conv.eval()
-                layer.first_block.eval()
-            elif isinstance(layer, OFALayer):
-                layer.ofa_conv.res_block.eval()
-            elif isinstance(layer, FinalBlock):
-                layer.final_expand_layer.eval()
-                layer.feature_mix_layer.eval()
-                layer.classifier.eval()
+            if isinstance(layer, OFALayer):
+                layer = layer.ofa_conv.res_block
+            layer.eval()
+
+    def get_model_size(self):
+        """
+        TODO probably not correct
+        inconsistent results when comparing to original OFA_net, test failing
+        """
+        depth, _, _ = self.get_active_config()
+        active_ofa_layers = [i for j in [[1] * d + [0] * (4-d) for d in depth] for i in j]
+        ofa_layer_idx = 0
+        param_size = 0
+        for e in self.edges:
+            layer = self.edges[e].op
+            if isinstance(layer, OFALayer):
+                if active_ofa_layers[ofa_layer_idx]:
+                    layer = layer.ofa_conv.res_block
+                ofa_layer_idx += 1
+            for param in layer.parameters():
+                param_size += param.nelement() * param.element_size()
+        size_all_mb = param_size / 1024 ** 2
+        return size_all_mb
+
+    def measure_latency(self, n=100):
+        self.move_graph_to(self.device)
+        x = torch.rand((1, 3, 224, 224))
+        x = x.to(self.device)
+        self.forward(x)  # for consistency, moving model to device
+        start = time.time()
+        for i in range(n):
+            self.forward(x)
+        end = time.time()
+        total = (end - start) * 1000
+        return total / n

@@ -8,5 +8,6 @@ from .natsbenchsize.graph import NATSBenchSizeSearchSpace
 from .hierarchical.graph import HierarchicalSearchSpace
 from .transbench101.graph import TransBench101SearchSpaceMicro
 from .transbench101.graph import TransBench101SearchSpaceMacro
+from .OnceForAll.graph import OnceForAllSearchSpace
 
 from .transbench101.api import TransNASBenchAPI

@@ -193,6 +193,31 @@ class TestOFASearchSpace(unittest.TestCase):
         for search_space_value, ofa_value in zip(ss_dict, ofa_dict):
             self.assertTrue(torch.equal(ss_dict[search_space_value], ofa_dict[ofa_value]))
 
+    @staticmethod
+    def model_size(model):
+        param_size = 0
+        for param in model.parameters():
+            param_size += param.nelement() * param.element_size()
+        size_all_mb = param_size / 1024 ** 2
+        return size_all_mb
+
+    def test_model_size(self):
+        """
+        TODO maybe no problem
+        """
+        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+        ofa_network = ofa_net(net_id, pretrained=True)
+        self.assertEqual(self.search_space.get_model_size(), self.model_size(ofa_network))
+
+        for i in range(10):
+            self.search_space.sample_random_architecture()
+            d, k, e = self.search_space.get_active_config()
+            ofa_network.set_active_subnet(k, e, d)
+            net = ofa_network.get_active_subnet()
+            a = self.search_space.get_model_size()
+            b = self.model_size(net)
+            self.assertEqual(a, b)
+
 
 if __name__ == '__main__':
     unittest.main()
