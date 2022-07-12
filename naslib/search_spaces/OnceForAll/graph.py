@@ -216,6 +216,8 @@ class OnceForAllSearchSpace(Graph):
 
         # kernel size and expansion ratio
         for ks, er in zip(config.kernel_size_list, config.expand_ratio_list):
+            # TODO index can easily be calculated no need to have so many if elifs
+            # self.ks_list.index(ks) * len(self.ks_list) + self.expand_ratio_list.index(er)
             if ks == 3 and er == 3:
                 op_indices.append(0)
             elif ks == 3 and er == 4:
@@ -456,7 +458,7 @@ class OnceForAllSearchSpace(Graph):
         for e in self.edges:
             try:
                 self.edges[e].op.move_to(device)
-            except:
+            except:  # TODO make excpetion more precise
                 layer = self.edges[e].op.to(device)
                 self.edges[e].set('op', layer)
 
