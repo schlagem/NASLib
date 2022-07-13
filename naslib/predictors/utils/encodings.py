@@ -32,6 +32,27 @@ one_hot_transbench101 = [
     [0, 0, 0, 1],
 ]
 
+one_hot_ofa_op = [
+    [1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1],
+
+]
+
+one_hot_ofa_d = [
+    [1, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 1],
+]
+
 OPS = ["avg_pool_3x3", "nor_conv_1x1", "nor_conv_3x3", "none", "skip_connect"]
 NUM_OPS = len(OPS)
 
@@ -53,6 +74,16 @@ def encode_adjacency_one_hot_tb101(arch):
         one_hot = [*one_hot, *one_hot_nasbench201[e]]
     return one_hot
 
+
+def encode_adjacency_one_hot_ofa(arch):
+
+    encoding = arch.get_op_indices()
+    one_hot = []
+    for e in encoding[:20]:
+        one_hot = [*one_hot, *one_hot_ofa_op[e]]
+    for e in encoding[20:]:
+        one_hot = [*one_hot, *one_hot_ofa_d[e]]
+    return one_hot
 
 def get_paths(arch):
     """
@@ -324,6 +355,16 @@ def encode_tb101(arch, encoding_type='adjacency_one_hot'):
             "{} is not yet supported as a predictor encoding".format(encoding_type)
         )
         raise NotImplementedError()
+
+
+def encode_ofa(arch, encoding_type='adjacency_one_hot'):
+    if encoding_type == "adjacency_one_hot":
+        return encode_adjacency_one_hot_ofa(arch)
+    else:
+        logger.info(
+            "{} is not yet supported as a predictor encoding".format(encoding_type)
+        )
+        raise NotImplementedError()
         
 
 def encode(arch, encoding_type="adjacency_one_hot", ss_type=None):
@@ -347,6 +388,8 @@ def encode(arch, encoding_type="adjacency_one_hot", ss_type=None):
                           encoding_type=encoding_type,
                           max_nodes=3,
                           accs=None)
+    elif ss_type == 'ofa':
+        return encode_ofa(arch, encoding_type=encoding_type)
     else:
         raise NotImplementedError(
             "{} is not yet supported for encodings".format(ss_type)

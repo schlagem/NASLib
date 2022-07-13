@@ -30,6 +30,7 @@ class RegularizedEvolution(MetaOptimizer):
 
         self.population = collections.deque(maxlen=self.population_size)
         self.history = torch.nn.ModuleList()
+
         self.constrained = config.search.constrained
         self.model_size = config.search.model_size
         self.latency = config.search.latency
