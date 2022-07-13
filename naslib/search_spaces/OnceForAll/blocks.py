@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 from collections import OrderedDict
+import copy
 
 
 from ofa.imagenet_classification.elastic_nn.modules.dynamic_layers import (
@@ -74,7 +75,8 @@ class FirstBlock(AbstractPrimitive):
 
     def state_dict(self, destination=None, prefix='', keep_vars=False):
         d = super().state_dict()
-        new_dict = OrderedDict([(k.replace("first_conv.", "block.0"), v) if "block.0" in k else (k, v) for k, v in d.items()])
+        new_dict = OrderedDict([(k.replace("first_conv.", "block.0"), v)
+                                if "block.0" in k else (k, v) for k, v in d.items()])
         return new_dict
 
     def get_embedded_ops(self):
@@ -83,6 +85,14 @@ class FirstBlock(AbstractPrimitive):
     def move_to(self, device):
         self.first_conv = self.first_conv.to(device)
         self.first_block = self.first_block.to(device)
+
+    def size(self):
+        param_size = 0.0
+        for param in self.first_conv.parameters():
+            param_size += param.nelement() * param.element_size()
+        for param in self.first_block.parameters():
+            param_size += param.nelement() * param.element_size()
+        return param_size / 1024 ** 2
 
 
 class FinalBlock(AbstractPrimitive):
@@ -145,6 +155,16 @@ class FinalBlock(AbstractPrimitive):
         self.feature_mix_layer = self.feature_mix_layer.to(device)
         self.classifier = self.classifier.to(device)
 
+    def size(self):
+        param_size = 0.0
+        for param in self.final_expand_layer.parameters():
+            param_size += param.nelement() * param.element_size()
+        for param in self.feature_mix_layer.parameters():
+            param_size += param.nelement() * param.element_size()
+        for param in self.classifier.parameters():
+            param_size += param.nelement() * param.element_size()
+        return param_size / 1024 ** 2
+
 
 class OFAConv:
 
@@ -194,4 +214,16 @@ class OFALayer(AbstractPrimitive):
 
     def move_to(self, device):
         self.ofa_conv.move_to(device)
+
+    def size(self):
+        param_size = 0.0
+        self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
+        self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
+        block = ResidualBlock(self.ofa_conv.res_block.conv.get_active_subnet(self.ofa_conv.res_block.conv.in_channels,
+                                                                             preserve_weight=True),
+                              copy.deepcopy(self.ofa_conv.res_block.shortcut))
+        for param in block.parameters():
+            param_size += param.nelement() * param.element_size()
+
+        return param_size / 1024 ** 2
 

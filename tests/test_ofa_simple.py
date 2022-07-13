@@ -179,11 +179,9 @@ class TestOFASearchSpace(unittest.TestCase):
 
     @staticmethod
     def model_size(model):
-        # TODO: currently only measures ofa blocks as in search space it is done that way
         param_size = 0
-        for n, param in model.named_parameters():
-            if "blocks." in n and "blocks.0." not in n:
-                param_size += param.nelement() * param.element_size()
+        for param in model.parameters():
+            param_size += param.nelement() * param.element_size()
         size_all_mb = param_size / 1024 ** 2
         return size_all_mb
 
@@ -191,10 +189,8 @@ class TestOFASearchSpace(unittest.TestCase):
         """
         Test to verify the size of the submodel size
         """
-        # TODO currently we measure only adptive blocks but complete size is really important
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
-        # self.assertEqual(self.search_space.get_model_size(), self.model_size(ofa_network))
 
         for i in range(100):
             d, k, e = self.search_space.get_active_config()

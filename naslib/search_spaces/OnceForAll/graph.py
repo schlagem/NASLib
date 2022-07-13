@@ -506,47 +506,22 @@ class OnceForAllSearchSpace(Graph):
 
     def get_model_size(self):
         """
-        TODO probably not correct
-        inconsistent results when comparing to original OFA_net, test failing
+        Returns model size in mb
         """
-        """
-        depth, _, _ = self.get_active_config()
-        active_ofa_layers = [i for j in [[1] * d + [0] * (4-d) for d in depth] for i in j]
-        ofa_layer_idx = 0
-        param_size = 0
-        for e in self.edges:
-            layer = self.edges[e].op
-            if isinstance(layer, OFALayer):
-                if active_ofa_layers[ofa_layer_idx]:
-                    layer = layer.ofa_conv.res_block
-                ofa_layer_idx += 1
-            for param in layer.parameters():
-                param_size += param.nelement() * param.element_size()
-        size_all_mb = param_size / 1024 ** 2
-        return size_all_mb
-        """
-        param_size = 0.0
-        input_channel = 16
-        for d_node, start_node in zip(self.depth_nodes, self.block_start_nodes):
-            depth = 0
-            for j in range(1, 4):
-                if not self.edges[d_node - j, d_node].op_index:
-                    depth = 5 - j
+        size_all_mb = 0.0
+        # First block
+        size_all_mb += self.edges[1, 2].op.size()
+
+        # Adaptive layers
+        d, _, _ = self.get_active_config()
+        for depth, start_node in zip(d, self.block_start_nodes):
             for n in range(depth):
                 layer = self.edges[start_node + n, start_node + n + 1].op
-                # TODO currently the active kernel size is set but not in the mobile_inverted_conv
-                layer.ofa_conv.mobile_inverted_conv.active_kernel_size = layer.active_kernel_size
-                layer.ofa_conv.mobile_inverted_conv.active_expand_ratio = layer.active_expand_ratio
-                block = ResidualBlock(
-                        layer.ofa_conv.res_block.conv.get_active_subnet(
-                            input_channel, preserve_weight=True
-                        ),
-                        copy.deepcopy(layer.ofa_conv.res_block.shortcut),
-                    )
-                input_channel = layer.ofa_conv.res_block.conv.out_channels
-                for param in block.parameters():
-                    param_size += param.nelement() * param.element_size()
-        size_all_mb = param_size / 1024 ** 2
+                size_all_mb += layer.size()
+
+        # Last block
+        size_all_mb += self.edges[31, 32].op.size()
+
         return size_all_mb
 
     def measure_latency(self, n=100):
