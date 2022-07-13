@@ -45,6 +45,7 @@ class OnceForAllSearchSpace(Graph):
     def __init__(self):
         super().__init__()
 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # we don't call the search space with params thus we define them here
         # for our application this should suffice
         n_classes = 1000  # ImageNet
@@ -174,8 +175,6 @@ class OnceForAllSearchSpace(Graph):
         # edges between blocks
         for i in self.depth_nodes[:-1]:
             self.edges[i, i + 1].set("op", ops.Identity())
-
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # set bn param
         # TODO this doesnt work iterate all modules and call this function
@@ -369,7 +368,7 @@ class OnceForAllSearchSpace(Graph):
         elif metric == Metric.TRAIN_TIME:
             return -1
         elif metric == Metric.VAL_ACCURACY:
-            return np.random.random_sample() * 100
+            return np.random.random_sample() * 100  # TODO for faster testing
             # return self._eval_graph(metric)
         elif metric == Metric.VAL_LOSS:
             return -1
@@ -385,42 +384,6 @@ class OnceForAllSearchSpace(Graph):
             return -1
 
         return -1
-
-    def _eval_pretrained_ofa(self, net, metric: Metric, path='~/dataset/imagenet/'):
-        if self.DEFAULT_IMAGENET_PATH:
-            path = self.DEFAULT_IMAGENET_PATH
-        if metric == Metric.VAL_ACCURACY:
-            metric = 'val'
-        else:
-            metric = 'test'
-        data_path = os.path.join(path, metric)
-        imagenet_data = datasets.ImageFolder(
-            data_path,
-            self._ofa_transform()
-        )
-        data_loader = torch.utils.data.DataLoader(
-            imagenet_data,
-            batch_size=256,  # ~5GB
-            shuffle=False,
-            pin_memory=True
-        )
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        net.eval()
-        net.to(device)
-        criterion = nn.CrossEntropyLoss()
-        losses = AverageMeter()
-        correct = 0
-        total = len(data_loader.dataset)
-        with torch.no_grad():
-            for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
-                images, labels = images.to(device), labels.to(device)
-                output = net(images)
-                loss = criterion(output, labels)
-                _, predicted = torch.max(output.data, 1)
-                correct += (predicted == labels).sum().item()
-                losses.update(loss.item())
-        accuracy = correct / total
-        return accuracy
 
     def _eval_graph(self, metric: Metric, path='~/dataset/imagenet/', subset=True, subset_size=1024):
         if self.DEFAULT_IMAGENET_PATH:
@@ -444,7 +407,7 @@ class OnceForAllSearchSpace(Graph):
         )
         correct = 0
         total = len(data_loader.dataset)
-        self.move_graph_to(self.device)
+        self.move_to(self.device)
         with torch.no_grad():
             for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -483,7 +446,7 @@ class OnceForAllSearchSpace(Graph):
                 e.append(expand)
         return d, k, e
 
-    def move_graph_to(self, device=torch.device('cpu')):
+    def move_to(self, device=torch.device('cpu')):
         """
         Helper function, that moves the graph to a specific device
         """
@@ -525,7 +488,7 @@ class OnceForAllSearchSpace(Graph):
         return size_all_mb
 
     def measure_latency(self, n=100):
-        self.move_graph_to(self.device)
+        self.move_to(self.device)
         x = torch.rand((1, 3, 224, 224))
         x = x.to(self.device)
         self.forward(x)  # for consistency, moving model to device
@@ -534,6 +497,7 @@ class OnceForAllSearchSpace(Graph):
             self.forward(x)
         end = time.time()
         total = (end - start) * 1000
+        self.move_to()
         return total / n
     
     @staticmethod
