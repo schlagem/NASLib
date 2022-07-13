@@ -369,13 +369,14 @@ class OnceForAllSearchSpace(Graph):
         elif metric == Metric.TRAIN_TIME:
             return -1
         elif metric == Metric.VAL_ACCURACY:
-            return self._eval_graph(metric)
+            return np.random.random_sample() * 100
+            # return self._eval_graph(metric)
         elif metric == Metric.VAL_LOSS:
             return -1
         elif metric == Metric.VAL_TIME:
             return -1
         elif metric == Metric.TEST_ACCURACY:
-            return -1  # TODO
+            return -1  # TODO wait for testset
         elif metric == Metric.TEST_LOSS:
             return -1
         elif metric == Metric.TEST_TIME:
@@ -559,3 +560,7 @@ class OnceForAllSearchSpace(Graph):
         end = time.time()
         total = (end - start) * 1000
         return total / n
+    
+    @staticmethod
+    def get_type():
+        return "ofa"

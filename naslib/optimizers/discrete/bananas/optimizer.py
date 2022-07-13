@@ -47,6 +47,10 @@ class Bananas(MetaOptimizer):
         self.num_candidates = config.search.num_candidates
         self.max_zerocost = 1000
 
+        self.constrained = config.search.constrained
+        self.model_size = config.search.model_size
+        self.latency = config.search.latency
+
         self.train_data = []
         self.next_batch = []
         self.history = torch.nn.ModuleList()
@@ -84,7 +88,10 @@ class Bananas(MetaOptimizer):
                 torch.nn.Module()
             )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.search_space.clone()
-            model.arch.sample_random_architecture(dataset_api=self.dataset_api)
+            if self.constrained:
+                self.get_valid_model_under_constraints(model)
+            else:
+                model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
                 self.performance_metric, self.dataset, dataset_api=self.dataset_api
             )
@@ -140,7 +147,6 @@ class Bananas(MetaOptimizer):
                         "jacov_scores": [m.zc_score for m in self.unlabeled]
                     }
                     ensemble.set_pre_computations(unlabeled_zc_info=unlabeled_zc_info)
-
                 train_error = ensemble.fit(xtrain, ytrain)
 
                 # define an acquisition function
@@ -155,7 +161,10 @@ class Bananas(MetaOptimizer):
 
                     for _ in range(self.num_candidates):
                         arch = self.search_space.clone()
-                        arch.sample_random_architecture(dataset_api=self.dataset_api)
+                        if self.constrained:
+                            arch = self.create_constrained_arch(arch)
+                        else:
+                            arch.sample_random_architecture(dataset_api=self.dataset_api)
                         candidates.append(arch)
 
                 elif self.acq_fn_optimization == "mutation":
@@ -174,14 +183,17 @@ class Bananas(MetaOptimizer):
                             candidate = arch.clone()
                             for edit in range(int(self.max_mutations)):
                                 arch = self.search_space.clone()
-                                arch.mutate(candidate, dataset_api=self.dataset_api)
+                                if self.constrained:
+                                    arch = self.create_constrained_arch(arch, candidate)
+                                else:
+                                    arch.mutate(candidate, dataset_api=self.dataset_api)
                                 candidate = arch
                             candidates.append(candidate)
 
                 else:
                     logger.info(
                         "{} is not yet supported as a acq fn optimizer".format(
-                            encoding_type
+                            self.acq_fn_optimization
                         )
                     )
                     raise NotImplementedError()
@@ -197,7 +209,7 @@ class Bananas(MetaOptimizer):
                 else:
                     values = [acq_fn(encoding) for encoding in candidates]
                 sorted_indices = np.argsort(values)
-                choices = [candidates[i] for i in sorted_indices[-self.k :]]
+                choices = [candidates[i] for i in sorted_indices[-self.k:]]
                 self.next_batch = [*choices]
 
             # train the next architecture chosen by the neural predictor
@@ -216,6 +228,28 @@ class Bananas(MetaOptimizer):
 
             self._update_history(model)
             self.train_data.append(model)
+
+    def get_valid_model_under_constraints(self, model, parent=None):
+        for i in range(100):
+            if parent:
+                model.arch.mutate(parent.arch)
+            else:
+                model.arch.sample_random_architecture()
+            latency = model.arch.measure_latency()
+            model_size = model.arch.get_model_size()
+            if latency <= self.latency and model_size <= self.model_size:
+                break
+
+    def create_constrained_arch(self, arch, parent=None):
+        for i in range(100):
+            if parent:
+                arch.mutate(parent)
+            else:
+                arch.sample_random_architecture()
+            latency = arch.measure_latency()
+            model_size = arch.get_model_size()
+            if latency <= self.latency and model_size <= self.model_size:
+                return arch
 
     def _update_history(self, child):
         if len(self.history) < 100:
