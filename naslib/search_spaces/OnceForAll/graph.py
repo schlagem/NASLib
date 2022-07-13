@@ -11,6 +11,13 @@ from naslib.utils.utils import load_config
 # Once for all imports
 from ofa.utils import download_url
 from ofa.utils import MyNetwork, make_divisible
+from ofa.utils.layers import (
+    ConvLayer,
+    IdentityLayer,
+    LinearLayer,
+    MBConvLayer,
+    ResidualBlock,
+)
 
 from ofa.model_zoo import ofa_net
 
@@ -25,6 +32,7 @@ import torch.nn as nn
 from naslib.utils.utils import AverageMeter
 from tqdm import tqdm
 import math
+import copy
 
 
 class OnceForAllSearchSpace(Graph):
@@ -500,6 +508,7 @@ class OnceForAllSearchSpace(Graph):
         TODO probably not correct
         inconsistent results when comparing to original OFA_net, test failing
         """
+        """
         depth, _, _ = self.get_active_config()
         active_ofa_layers = [i for j in [[1] * d + [0] * (4-d) for d in depth] for i in j]
         ofa_layer_idx = 0
@@ -512,6 +521,30 @@ class OnceForAllSearchSpace(Graph):
                 ofa_layer_idx += 1
             for param in layer.parameters():
                 param_size += param.nelement() * param.element_size()
+        size_all_mb = param_size / 1024 ** 2
+        return size_all_mb
+        """
+        param_size = 0.0
+        input_channel = 16
+        for d_node, start_node in zip(self.depth_nodes, self.block_start_nodes):
+            depth = 0
+            for j in range(1, 4):
+                if not self.edges[d_node - j, d_node].op_index:
+                    depth = 5 - j
+            for n in range(depth):
+                layer = self.edges[start_node + n, start_node + n + 1].op
+                # TODO currently the active kernel size is set but not in the mobile_inverted_conv
+                layer.ofa_conv.mobile_inverted_conv.active_kernel_size = layer.active_kernel_size
+                layer.ofa_conv.mobile_inverted_conv.active_expand_ratio = layer.active_expand_ratio
+                block = ResidualBlock(
+                        layer.ofa_conv.res_block.conv.get_active_subnet(
+                            input_channel, preserve_weight=True
+                        ),
+                        copy.deepcopy(layer.ofa_conv.res_block.shortcut),
+                    )
+                input_channel = layer.ofa_conv.res_block.conv.out_channels
+                for param in block.parameters():
+                    param_size += param.nelement() * param.element_size()
         size_all_mb = param_size / 1024 ** 2
         return size_all_mb
 
