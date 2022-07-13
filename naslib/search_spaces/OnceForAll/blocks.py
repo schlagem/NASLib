@@ -199,6 +199,7 @@ class OFALayer(AbstractPrimitive):
         self.active_expand_ratio = active_expand_ratio
 
     def forward(self, x, edge_data):
+        # TODO this should probably be updated as soon as the operation is update
         self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
         self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
         x = self.ofa_conv.res_block(x)
