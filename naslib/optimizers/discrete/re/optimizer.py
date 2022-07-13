@@ -30,6 +30,9 @@ class RegularizedEvolution(MetaOptimizer):
 
         self.population = collections.deque(maxlen=self.population_size)
         self.history = torch.nn.ModuleList()
+        self.constrained = config.search.constrained
+        self.model_size = config.search.model_size
+        self.latency = config.search.latency
 
     def adapt_search_space(self, search_space, scope=None, dataset_api=None):
         assert (
@@ -49,7 +52,10 @@ class RegularizedEvolution(MetaOptimizer):
                 torch.nn.Module()
             )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.search_space.clone()
-            model.arch.sample_random_architecture(dataset_api=self.dataset_api)
+            if self.constrained:
+                self.get_valid_arch_under_constraints(model)
+            else:
+                model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
                 self.performance_metric, self.dataset, dataset_api=self.dataset_api
             )
@@ -71,7 +77,10 @@ class RegularizedEvolution(MetaOptimizer):
                 torch.nn.Module()
             )  # hacky way to get arch and accuracy checkpointable
             child.arch = self.search_space.clone()
-            child.arch.mutate(parent.arch, dataset_api=self.dataset_api)
+            if self.constrained:
+                self.get_valid_arch_under_constraints(child, parent)
+            else:
+                child.arch.mutate(parent.arch, dataset_api=self.dataset_api)
             child.accuracy = child.arch.query(
                 self.performance_metric, self.dataset, dataset_api=self.dataset_api
             )
@@ -109,6 +118,17 @@ class RegularizedEvolution(MetaOptimizer):
             ),
         )
 
+    def get_valid_arch_under_constraints(self, model, parent=None):
+        for i in range(100):
+            if parent:
+                model.arch.mutate(parent.arch)
+            else:
+                model.arch.sample_random_architecture()
+            latency = model.arch.measure_latency()
+            model_size = model.arch.get_model_size()
+            if latency <= self.latency and model_size <= self.model_size:
+                break
+
     def test_statistics(self):
         best_arch = self.get_final_architecture()
         return best_arch.query(Metric.RAW, self.dataset, dataset_api=self.dataset_api)
@@ -124,65 +144,3 @@ class RegularizedEvolution(MetaOptimizer):
 
     def get_model_size(self):
         return count_parameters_in_MB(self.history)
-
-
-class REwC(RegularizedEvolution):
-
-    def __init__(self, config):
-        super().__init__(config)
-        self.model_size = config.search.model_size
-        self.latency = config.search.latency
-
-    def new_epoch(self, epoch):
-        # We sample as many architectures as we need
-        if epoch < self.population_size:
-            logger.info("Start sampling architectures to fill the population")
-            # If there is no scope defined, let's use the search space default one
-
-            model = (
-                torch.nn.Module()
-            )  # hacky way to get arch and accuracy checkpointable
-            model.arch = self.search_space.clone()
-            self.get_valid_arch_under_constraints(model)
-            model.accuracy = model.arch.query(
-                self.performance_metric, self.dataset, dataset_api=self.dataset_api
-            )
-
-            self.population.append(model)
-            self._update_history(model)
-            log_every_n_seconds(
-                logging.INFO, "Population size {}".format(len(self.population))
-            )
-        else:
-            sample = []
-            while len(sample) < self.sample_size:
-                candidate = np.random.choice(list(self.population))
-                sample.append(candidate)
-
-            parent = max(sample, key=lambda x: x.accuracy)
-
-            child = (
-                torch.nn.Module()
-            )  # hacky way to get arch and accuracy checkpointable
-            child.arch = self.search_space.clone()
-            self.get_valid_arch_under_constraints(child, parent)
-            child.accuracy = child.arch.query(
-                self.performance_metric, self.dataset, dataset_api=self.dataset_api
-            )
-
-            self.population.append(child)
-            self._update_history(child)
-
-    def get_valid_arch_under_constraints(self, model, parent=None):
-        for i in range(100):
-            if parent:
-                model.arch.mutate(parent.arch)
-            else:
-                model.arch.sample_random_architecture()
-            latency = model.arch.measure_latency()
-            model_size = model.arch.get_model_size()
-            if latency <= self.latency and model_size <= self.model_size:
-                break
-
-    def get_op_optimizer(self):
-        raise NotImplementedError()

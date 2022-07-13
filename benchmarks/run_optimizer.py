@@ -1,7 +1,6 @@
 import logging
-import argparse
 
-from naslib.optimizers import REwC
+from naslib.optimizers import RegularizedEvolution as RS
 from naslib.search_spaces import OnceForAllSearchSpace as OFA
 from naslib.defaults.trainer import Trainer
 
@@ -9,7 +8,7 @@ from naslib.utils import utils, setup_logger, get_dataset_api
 
 
 def run_optimizer(config_file="docs/re_run_0/imagenet/configs/nas_predictors/config_re_gp_0.yaml",
-                  nas_optimizer=REwC) -> None:
+                  nas_optimizer=RE) -> None:
     # TODO: add all the utilities, such as config file reading, logging as before.
     # afterwards instantiate the search space, optimizer, trainer and run the search + evaluation
     # args = ["--config-file", config_file]
