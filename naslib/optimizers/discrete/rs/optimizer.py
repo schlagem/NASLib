@@ -124,3 +124,46 @@ class RandomSearch(MetaOptimizer):
 
     def get_checkpointables(self):
         return {"model": self.history}
+
+
+class RSwC(RandomSearch):
+
+    def __init__(
+            self,
+            config,
+            weight_optimizer=torch.optim.SGD,
+            loss_criteria=torch.nn.CrossEntropyLoss(),
+            grad_clip=None,
+    ):
+        super().__init__(config, weight_optimizer, loss_criteria, grad_clip)
+        self.latency = config.search.latency
+        self.model_size = config.search.model_size
+
+    def new_epoch(self, e):
+        """
+        Sample a new architecture to train.
+        """
+
+        model = torch.nn.Module()  # hacky way to get arch and accuracy checkpointable
+        model.arch = self.search_space.clone()
+        self.get_valid_arch_under_constraints(model)
+        model.accuracy = model.arch.query(
+            self.performance_metric,
+            self.dataset,
+            epoch=self.fidelity,
+            dataset_api=self.dataset_api,
+        )
+
+        self.sampled_archs.append(model)
+        self._update_history(model)
+
+    def get_valid_arch_under_constraints(self, model, parent=None):
+        for i in range(100):
+            if parent:
+                model.arch.mutate(parent.arch)
+            else:
+                model.arch.sample_random_architecture()
+            latency = model.arch.measure_latency()
+            model_size = model.arch.get_model_size()
+            if latency <= self.latency and model_size <= self.model_size:
+                break

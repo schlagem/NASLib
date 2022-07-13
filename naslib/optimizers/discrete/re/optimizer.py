@@ -182,7 +182,7 @@ class REwC(RegularizedEvolution):
             latency = model.arch.measure_latency()
             model_size = model.arch.get_model_size()
             if latency <= self.latency and model_size <= self.model_size:
-                return 0
+                break
 
     def get_op_optimizer(self):
         raise NotImplementedError()
