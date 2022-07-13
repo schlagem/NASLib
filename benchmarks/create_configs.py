@@ -123,7 +123,6 @@ def main(args):
 
         for i in range(args.start_seed, args.start_seed + args.trials):
             config = {
-                'seed': i,
                 'search_space': args.search_space,
                 'dataset': args.dataset,
                 'optimizer': args.optimizer,
@@ -152,6 +151,7 @@ def main(args):
                            'constrained': True,
                            'model_size': 1e10,
                            'latency': 1000,
+                           'seed': i,
                            }
             }
 

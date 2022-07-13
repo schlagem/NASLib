@@ -25,6 +25,6 @@ search:
   population_size: 30
   predictor_type: mlp
   sample_size: 10
+  seed: 0
   train_portion: 0.7
 search_space: ofa
-seed: 0
