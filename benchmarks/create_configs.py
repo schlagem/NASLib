@@ -7,7 +7,6 @@ import numpy as np
 
 
 def main(args):
-
     if args.config_type == 'nas':
         folder = f'{args.out_dir}/{args.dataset}/configs/nas'
         os.makedirs(folder, exist_ok=True)
@@ -35,9 +34,9 @@ def main(args):
                            'num_arches_to_mutate': 2,
                            'max_mutations': 1,
                            'num_candidates': 100,
-                           'predictor_type':'feedforward',
+                           'predictor_type': 'feedforward',
                            'debug_predictor': False
-                          }
+                           }
             }
 
             if args.optimizer == 'lcsvr' and args.experiment_type == 'vary_fidelity':
@@ -55,7 +54,7 @@ def main(args):
         os.makedirs(folder, exist_ok=True)
         args.start_seed = int(args.start_seed)
         args.trials = int(args.trials)
-        
+
         if args.search_space == 'nasbench101':
             total_epochs = 108 - 1
             max_train_size = 1000
@@ -69,11 +68,11 @@ def main(args):
             total_epochs = 50 - 1
             max_train_size = 1000
 
-        train_size_list = [int(j) for j in np.logspace(start=np.log(5.1)/np.log(2), 
-                                                       stop=np.log(max_train_size)/np.log(2), 
+        train_size_list = [int(j) for j in np.logspace(start=np.log(5.1) / np.log(2),
+                                                       stop=np.log(max_train_size) / np.log(2),
                                                        num=11, endpoint=True, base=2.0)]
-        fidelity_list = [int(j) for j in np.logspace(start=0.9, 
-                                                     stop=np.log(total_epochs)/np.log(2), 
+        fidelity_list = [int(j) for j in np.logspace(start=0.9,
+                                                     stop=np.log(total_epochs) / np.log(2),
                                                      num=15, endpoint=True, base=2.0)]
 
         if args.search_space == 'nlp':
@@ -149,8 +148,11 @@ def main(args):
                            'cutout': False,
                            'cutout_length': 16,
                            'cutout_prob': 1.0,
-                           'train_portion': 0.7
-                          }
+                           'train_portion': 0.7,
+                           'constrained': True,
+                           'model_size': 1e10,
+                           'latency': 1000,
+                           }
             }
 
             path = folder + f'/config_{args.optimizer}_{args.predictor}_{i}.yaml'

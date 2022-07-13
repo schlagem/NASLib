@@ -1,6 +1,6 @@
-dataset: test
+dataset: imagenet
 optimizer: re
-out_dir: re_run_0
+out_dir: docs/re_run_0
 search:
   acq_fn_optimization: random_sampling
   acq_fn_type: its
@@ -15,9 +15,9 @@ search:
   epochs: 100
   fidelity: 200
   k: 20
-  latency: 50
+  latency: 1000
   max_mutations: 1
-  model_size: 30
+  model_size: 10000000000.0
   num_arches_to_mutate: 5
   num_candidates: 200
   num_ensemble: 3
@@ -26,6 +26,5 @@ search:
   predictor_type: gp
   sample_size: 10
   train_portion: 0.7
-  seed: 0
 search_space: ofa
 seed: 0

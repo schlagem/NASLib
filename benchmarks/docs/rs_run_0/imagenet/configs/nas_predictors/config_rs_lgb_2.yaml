@@ -1,6 +1,6 @@
 dataset: imagenet
-optimizer: re
-out_dir: docs/re_run_0
+optimizer: rs
+out_dir: docs/rs_run_0
 search:
   acq_fn_optimization: random_sampling
   acq_fn_type: its

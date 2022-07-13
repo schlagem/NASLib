@@ -1,6 +1,6 @@
 dataset: imagenet
-optimizer: re
-out_dir: docs/re_run_0
+optimizer: bananas
+out_dir: docs/bananas_run_0
 search:
   acq_fn_optimization: random_sampling
   acq_fn_type: its
@@ -23,7 +23,7 @@ search:
   num_ensemble: 3
   num_init: 20
   population_size: 30
-  predictor_type: lgb
+  predictor_type: rf
   sample_size: 10
   train_portion: 0.7
 search_space: ofa
