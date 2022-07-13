@@ -159,7 +159,7 @@ class OnceForAllSearchSpace(Graph):
                         ops.Zero(stride=1)  # we need to set stride to one
                     ])
                 if j == 1:  # TODO move this from init to sample architecture or to set max function similar to darts
-                    self._set_op_indice(self.edges[i - j, i], 0)  # TODO change to max depth
+                    self._set_op_indice(self.edges[i - j, i], 0)
                 else:
                     self._set_op_indice(self.edges[i - j, i], 1)
 
@@ -215,44 +215,22 @@ class OnceForAllSearchSpace(Graph):
     def load_op_from_config(self, config_file_path):
         # load operations from a config file
         config = load_config(path=config_file_path)
-        # print(f'config_kernel_size_list: {config.kernel_size_list} with size: {len(config.kernel_size_list)}')
 
         # set op indices
         op_indices = []
 
         # kernel size and expansion ratio
         for ks, er in zip(config.kernel_size_list, config.expand_ratio_list):
-            if ks == 3 and er == 3:
-                op_indices.append(0)
-            elif ks == 3 and er == 4:
-                op_indices.append(1)
-            elif ks == 3 and er == 6:
-                op_indices.append(2)
-            elif ks == 5 and er == 3:
-                op_indices.append(3)
-            elif ks == 5 and er == 4:
-                op_indices.append(4)
-            elif ks == 5 and er == 6:
-                op_indices.append(5)
-            elif ks == 7 and er == 3:
-                op_indices.append(6)
-            elif ks == 7 and er == 4:
-                op_indices.append(7)
-            elif ks == 7 and er == 6:
-                op_indices.append(8)
-            else:
-                raise ValueError(f"Combination of kernel size {ks} and expansion ratio {er} not allowed")
-
+            if ks not in self.ks_list:
+                raise ValueError(f"Kernel size {ks} not in valid sizes {self.ks_list}!")
+            if er not in self.expand_ratio_list:
+                raise ValueError(f"Expand ratio {er} not in valid sizes {self.expand_ratio_list}!")
+            op_indices.append(self.ks_list.index(ks) * len(self.ks_list) + self.expand_ratio_list.index(er))
         # depth
         for i in config.depth_list:
-            if i == 4:
-                op_indices.append(1)
-            elif i == 3:
-                op_indices.append(2)
-            elif i == 2:
-                op_indices.append(3)
-            else:
-                raise ValueError(f"Depth {i} not allowed")
+            if i not in self.depth_list:
+                raise ValueError(f"Depth {i} not in valid sizes {self.depth_list}!")
+            op_indices.append(5 - i)
 
         self.set_op_indices(op_indices)
 
