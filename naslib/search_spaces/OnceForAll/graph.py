@@ -1,6 +1,5 @@
 # naslib imports
 import os.path
-import time
 
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
 from naslib.search_spaces.core.graph import Graph
@@ -19,20 +18,18 @@ from ofa.utils.layers import (
     ResidualBlock,
 )
 
-from ofa.model_zoo import ofa_net
-
 # other imports
+import math
 import numpy as np
 import torch
-from itertools import product
-from collections import OrderedDict
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-import torch.nn as nn
-from naslib.utils.utils import AverageMeter
+
+from collections import OrderedDict
+from itertools import product
+from torch.nn.parameter import Parameter
+from typing import Iterator
 from tqdm import tqdm
-import math
-import copy
 
 
 class OnceForAllSearchSpace(Graph):
@@ -296,8 +293,7 @@ class OnceForAllSearchSpace(Graph):
         edge.set("op", primitives[edge.op_index])
         edge.set("primitives", primitives)  # store for later use
 
-    def _set_weights(self):
-        net_id = "ofa_mbv3_d234_e346_k357_w1.0"
+    def set_weights(self, net_id="ofa_mbv3_d234_e346_k357_w1.0"):
         url_base = "https://hanlab.mit.edu/files/OnceForAll/ofa_nets/"
         init = torch.load(
             download_url(url_base + net_id, model_dir=".torch/ofa_nets"),
@@ -369,13 +365,13 @@ class OnceForAllSearchSpace(Graph):
             return -1
         elif metric == Metric.VAL_ACCURACY:
             return np.random.random_sample() * 100  # TODO for faster testing
-            # return self._eval_graph(metric)
+            # return self.__evaluate()
         elif metric == Metric.VAL_LOSS:
             return -1
         elif metric == Metric.VAL_TIME:
             return -1
         elif metric == Metric.TEST_ACCURACY:
-            return -1  # TODO wait for testset
+            return self._evaluate()
         elif metric == Metric.TEST_LOSS:
             return -1
         elif metric == Metric.TEST_TIME:
@@ -385,20 +381,17 @@ class OnceForAllSearchSpace(Graph):
 
         return -1
 
-    def _eval_graph(self, metric: Metric, path='~/dataset/imagenet/', subset=True, subset_size=1024):
+    def _evaluate(self, path='~/dataset/imagenet/', subset=True, subset_size=1024):
         if self.DEFAULT_IMAGENET_PATH:
             path = self.DEFAULT_IMAGENET_PATH
-        if metric == Metric.VAL_ACCURACY:
-            metric = 'val'
-        elif metric == Metric.TEST_ACCURACY:
-            metric = 'test'
-        data_path = os.path.join(path, metric)
+        data_path = os.path.join(path, 'val')
         imagenet_data = datasets.ImageFolder(
             data_path,
             self._ofa_transform()
         )
         if subset:
-            imagenet_data = torch.utils.data.Subset(imagenet_data, np.random.randint(0, 50000, subset_size))
+            imagenet_data =\
+                torch.utils.data.Subset(imagenet_data, np.random.randint(0, len(imagenet_data), subset_size))
         data_loader = torch.utils.data.DataLoader(
             imagenet_data,
             batch_size=256,  # ~5GB on gpu memory
@@ -407,11 +400,11 @@ class OnceForAllSearchSpace(Graph):
         )
         correct = 0
         total = len(data_loader.dataset)
-        self.move_to(self.device)
+        self.to(self.device)
         with torch.no_grad():
             for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
                 images, labels = images.to(self.device), labels.to(self.device)
-                output = self.forward(images)
+                output = self(images)
                 _, predicted = torch.max(output.data, 1)
                 correct += (predicted == labels).sum().item()
         accuracy = correct / total * 100
@@ -446,7 +439,7 @@ class OnceForAllSearchSpace(Graph):
                 e.append(expand)
         return d, k, e
 
-    def move_to(self, device=torch.device('cpu')):
+    def to(self, device=torch.device('cpu')):
         """
         Helper function, that moves the graph to a specific device
         """
@@ -456,6 +449,7 @@ class OnceForAllSearchSpace(Graph):
             except AttributeError:
                 layer = self.edges[e].op.to(device)
                 self.edges[e].set('op', layer)
+        return self
 
     def eval(self):
         """
@@ -487,19 +481,20 @@ class OnceForAllSearchSpace(Graph):
 
         return size_all_mb
 
-    def measure_latency(self, n=100):
-        self.move_to(self.device)
-        x = torch.rand((1, 3, 224, 224))
-        x = x.to(self.device)
-        self.forward(x)  # for consistency, moving model to device
-        start = time.time()
-        for i in range(n):
-            self.forward(x)
-        end = time.time()
-        total = (end - start) * 1000
-        self.move_to()
-        return total / n
-    
+    def parameters(self, recurse: bool = True) -> Iterator[Parameter]:
+        edges = [(1, 2)]
+        # Adaptive layers
+        d, _, _ = self.get_active_config()
+        for depth, start_node in zip(d, self.block_start_nodes):
+            for n in range(depth):
+                edges += [(start_node + n, start_node + n + 1)]
+        # Last block
+        edges += [(31, 32)]
+        for e in edges:
+            layer = self.edges[e].op
+            for p in layer.params():
+                yield p
+
     @staticmethod
     def get_type():
         return "ofa"

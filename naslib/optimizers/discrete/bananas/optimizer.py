@@ -15,6 +15,7 @@ from naslib.predictors.zerocost_v2 import ZeroCostV2
 
 from naslib.search_spaces.core.query_metrics import Metric
 
+from naslib.utils import measure_net_latency
 from naslib.utils.utils import AttrDict, count_parameters_in_MB, get_train_val_loaders
 from naslib.utils.logging import log_every_n_seconds
 
@@ -235,7 +236,7 @@ class Bananas(MetaOptimizer):
                 model.arch.mutate(parent.arch)
             else:
                 model.arch.sample_random_architecture()
-            latency = model.arch.measure_latency()
+            latency, _ = measure_net_latency(model.arch)
             model_size = model.arch.get_model_size()
             if latency <= self.latency and model_size <= self.model_size:
                 break
@@ -246,7 +247,7 @@ class Bananas(MetaOptimizer):
                 arch.mutate(parent)
             else:
                 arch.sample_random_architecture()
-            latency = arch.measure_latency()
+            latency, _ = measure_net_latency(arch)
             model_size = arch.get_model_size()
             if latency <= self.latency and model_size <= self.model_size:
                 return arch

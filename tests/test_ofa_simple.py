@@ -136,7 +136,7 @@ class TestOFASearchSpace(unittest.TestCase):
 
     def test_forward_correctness(self):
         # requires loading weights
-        self.search_space._set_weights()
+        self.search_space.set_weights()
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
         for i in range(50):
@@ -151,7 +151,7 @@ class TestOFASearchSpace(unittest.TestCase):
 
     def test_forward_correctness_eval(self):
         # requires loading weights
-        self.search_space._set_weights()
+        self.search_space.set_weights()
         self.search_space.eval()
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"
         ofa_network = ofa_net(net_id, pretrained=True)
@@ -167,7 +167,7 @@ class TestOFASearchSpace(unittest.TestCase):
                 ofa_network.set_active_subnet(ks=k, e=e, d=depths)
 
     def test_weights(self):
-        self.search_space._set_weights()
+        self.search_space.set_weights()
         ss_dict = self.search_space._state_dict()
 
         net_id = "ofa_mbv3_d234_e346_k357_w1.0"

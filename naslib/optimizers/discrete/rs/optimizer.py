@@ -3,6 +3,7 @@ import torch
 
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.search_spaces.core.query_metrics import Metric
+from naslib.utils import measure_net_latency
 
 
 class RandomSearch(MetaOptimizer):
@@ -81,7 +82,7 @@ class RandomSearch(MetaOptimizer):
     def get_valid_arch_under_constraints(self, model):
         for i in range(100):
             model.arch.sample_random_architecture()
-            latency = model.arch.measure_latency()
+            latency, _ = measure_net_latency(model.arch)
             model_size = model.arch.get_model_size()
             if latency <= self.latency and model_size <= self.model_size:
                 break

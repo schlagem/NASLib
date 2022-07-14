@@ -568,9 +568,10 @@ class Trainer(object):
 
         checkpointer = utils.Checkpointer(
             model=checkpointables.pop("model"),
-            save_dir=self.config.save + "/search"
-            if search
-            else self.config.save + "/eval",
+            save_dir=self.config.save
+            # save_dir=self.config.save + "/search"
+            # if search
+            # else self.config.save + "/eval",
             # **checkpointables #NOTE: this is throwing an Error
         )
 

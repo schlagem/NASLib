@@ -35,7 +35,11 @@ def main(args):
                            'max_mutations': 1,
                            'num_candidates': 100,
                            'predictor_type': 'feedforward',
-                           'debug_predictor': False
+                           'debug_predictor': False,
+                           'constrained': True,
+                           'model_size': 1e10,
+                           'latency': 1000,
+                           'seed': i,
                            }
             }
 
@@ -123,6 +127,7 @@ def main(args):
 
         for i in range(args.start_seed, args.start_seed + args.trials):
             config = {
+                'seed': i,
                 'search_space': args.search_space,
                 'dataset': args.dataset,
                 'optimizer': args.optimizer,

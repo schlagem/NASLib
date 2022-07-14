@@ -1,9 +1,7 @@
-
 import numpy as np
 import torch
 from collections import OrderedDict
 import copy
-
 
 from ofa.imagenet_classification.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer,
@@ -20,7 +18,6 @@ from ofa.utils import make_divisible, val2list, MyNetwork
 
 from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
 from ofa.utils import set_bn_param
-
 
 from ..core.primitives import AbstractPrimitive
 
@@ -94,6 +91,9 @@ class FirstBlock(AbstractPrimitive):
             param_size += param.nelement() * param.element_size()
         return param_size / 1024 ** 2
 
+    def params(self):
+        return list(self.first_conv.parameters()) + list(self.first_block.parameters())
+
 
 class FinalBlock(AbstractPrimitive):
 
@@ -165,6 +165,11 @@ class FinalBlock(AbstractPrimitive):
             param_size += param.nelement() * param.element_size()
         return param_size / 1024 ** 2
 
+    def params(self):
+        return list(self.final_expand_layer.parameters()) + \
+               list(self.feature_mix_layer.parameters()) + \
+               list(self.classifier.parameters())
+
 
 class OFAConv:
 
@@ -228,3 +233,10 @@ class OFALayer(AbstractPrimitive):
 
         return param_size / 1024 ** 2
 
+    def params(self):
+        self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
+        self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
+        block = ResidualBlock(self.ofa_conv.res_block.conv.get_active_subnet(self.ofa_conv.res_block.conv.in_channels,
+                                                                             preserve_weight=True),
+                              copy.deepcopy(self.ofa_conv.res_block.shortcut))
+        return self.ofa_conv.res_block.parameters()
