@@ -239,4 +239,4 @@ class OFALayer(AbstractPrimitive):
         block = ResidualBlock(self.ofa_conv.res_block.conv.get_active_subnet(self.ofa_conv.res_block.conv.in_channels,
                                                                              preserve_weight=True),
                               copy.deepcopy(self.ofa_conv.res_block.shortcut))
-        return self.ofa_conv.res_block.parameters()
+        return block.parameters()
