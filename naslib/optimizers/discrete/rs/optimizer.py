@@ -66,7 +66,7 @@ class RandomSearch(MetaOptimizer):
         model = torch.nn.Module()  # hacky way to get arch and accuracy checkpointable
         model.arch = self.search_space.clone()
         if self.constrained:
-            self.get_valid_arch_under_constraints(model)
+            self.get_valid_arch_under_constraints(model.arch)
         else:
             model.arch.sample_random_architecture(dataset_api=self.dataset_api)
         model.accuracy = model.arch.query(
@@ -79,11 +79,11 @@ class RandomSearch(MetaOptimizer):
         self.sampled_archs.append(model)
         self._update_history(model)
 
-    def get_valid_arch_under_constraints(self, model):
+    def get_valid_arch_under_constraints(self, subnet):
         for i in range(100):
-            model.arch.sample_random_architecture()
-            latency, _ = measure_net_latency(model.arch)
-            model_size = model.arch.get_model_size()
+            subnet.sample_random_architecture()
+            latency, _ = measure_net_latency(subnet)
+            model_size = subnet.get_model_size()
             if latency <= self.latency and model_size <= self.model_size:
                 break
 

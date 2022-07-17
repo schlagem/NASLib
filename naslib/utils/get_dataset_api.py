@@ -10,6 +10,7 @@ They must be loaded outside of the search space object, because search spaces ar
 throughout the discrete NAS algos, which would lead to memory errors.
 """
 
+
 def get_transbench101_api(dataset=None):
     datafile_path = os.path.join(get_project_root(), "data", "transnas-bench_v10141024.pth")
     assert os.path.exists(datafile_path), f"Could not fine {datafile_path}. Please download transnas-bench_v10141024.pth\
@@ -55,8 +56,8 @@ https://drive.google.com/drive/folders/1rwmkqyij3I24zn5GSO6fGv2mzdEfPIEa'
 def get_darts_api(dataset=None):
     # Paths to v1.0 model files and data file.
     nb_models_path = os.path.join(get_project_root(), "data", "nb_models")
-    nb301_model_path=os.path.join(nb_models_path, "xgb_v1.0")
-    nb301_runtime_path=os.path.join(nb_models_path, "lgb_runtime_v1.0")
+    nb301_model_path = os.path.join(nb_models_path, "xgb_v1.0")
+    nb301_runtime_path = os.path.join(nb_models_path, "lgb_runtime_v1.0")
     data_path = os.path.join(get_project_root(), "data", "nb301_full_training.pickle")
 
     models_not_found_msg = "Please download v1.0 models from \
@@ -118,7 +119,7 @@ def get_nlp_api(dataset=None):
     return {
         "nlp_data": nlp_data,
         "nlp_arches": nlp_arches,
-        "nlp_model":performance_model,
+        "nlp_model": performance_model,
     }
 
 
@@ -131,6 +132,7 @@ def get_asr_api(dataset=None):
         'asr_data': d,
     }
 
+
 def get_natsbenchsize_api(dataset=None):
     from nats_bench import create
 
@@ -138,8 +140,13 @@ def get_natsbenchsize_api(dataset=None):
     api = create(None, 'sss', fast_mode=True, verbose=True)
     return api
 
-def get_dataset_api(search_space=None, dataset=None):
 
+def get_ofa_api(dataset=None):
+    from naslib.search_spaces.OnceForAll.ofa_utils import OFADatasetAPI
+    return OFADatasetAPI()
+
+
+def get_dataset_api(search_space=None, dataset=None):
     if search_space == "nasbench101":
         return get_nasbench101_api(dataset=dataset)
 
@@ -161,9 +168,11 @@ def get_dataset_api(search_space=None, dataset=None):
     elif search_space == 'natsbenchsize':
         return get_natsbenchsize_api(dataset=dataset)
 
+    elif search_space == "ofa":
+        return get_ofa_api(dataset=dataset)
+
     elif search_space == "test":
         return None
 
     else:
         raise NotImplementedError()
-

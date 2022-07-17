@@ -1,5 +1,4 @@
 # naslib imports
-import os.path
 
 from naslib.search_spaces.OnceForAll.blocks import FinalBlock, FirstBlock, OFAConv, OFALayer
 from naslib.search_spaces.core.graph import Graph
@@ -7,27 +6,20 @@ from naslib.search_spaces.core.query_metrics import Metric
 from naslib.search_spaces.core import primitives as ops
 from naslib.utils.utils import load_config
 
-# Once for all imports
-from ofa.utils import download_url
-from ofa.utils import MyNetwork, make_divisible
-from ofa.utils.layers import (
-    ConvLayer,
-    IdentityLayer,
-    LinearLayer,
-    MBConvLayer,
-    ResidualBlock,
-)
+# Once-For-All imports
+from ofa.utils import download_url, make_divisible, MyNetwork
+from naslib.search_spaces.OnceForAll.ofa_utils import spec2feats
 
 # other imports
-import math
-import numpy as np
-import torch
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-
 from collections import OrderedDict
 from itertools import product
+import math
+import numpy as np
+import os.path
+import torch
 from torch.nn.parameter import Parameter
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 from typing import Iterator
 from tqdm import tqdm
 
@@ -37,7 +29,6 @@ class OnceForAllSearchSpace(Graph):
     Implementation of the Once for All Search space.
     """
     QUERYABLE = True
-    DEFAULT_IMAGENET_PATH = None
 
     def __init__(self):
         super().__init__()
@@ -356,7 +347,6 @@ class OnceForAllSearchSpace(Graph):
         """
         TODO params
         """
-
         if metric == Metric.TRAIN_ACCURACY:
             return -1
         elif metric == Metric.TRAIN_LOSS:
@@ -364,14 +354,28 @@ class OnceForAllSearchSpace(Graph):
         elif metric == Metric.TRAIN_TIME:
             return -1
         elif metric == Metric.VAL_ACCURACY:
-            return np.random.random_sample() * 100  # TODO for faster testing
-            # return self.__evaluate()
+            if dataset_api:
+                pred = dataset_api["accuracy_predictor"]
+                config = self.get_active_conf_dict()
+                return pred.predict_accuracy([config]).item() * 100
+            return -1
         elif metric == Metric.VAL_LOSS:
             return -1
         elif metric == Metric.VAL_TIME:
             return -1
         elif metric == Metric.TEST_ACCURACY:
-            return self._evaluate()
+            if dataset_api:
+                lut = dataset_api['ofa_data']
+                arch = self.encode_str()
+                if arch in lut:
+                    accuracy = lut[arch]
+                else:
+                    print(self.get_op_indices())
+                    accuracy = self.evaluate(dataset_api)
+                    lut[arch] = accuracy
+            else:
+                accuracy = self.evaluate(dataset_api)
+            return accuracy
         elif metric == Metric.TEST_LOSS:
             return -1
         elif metric == Metric.TEST_TIME:
@@ -381,9 +385,7 @@ class OnceForAllSearchSpace(Graph):
 
         return -1
 
-    def _evaluate(self, path='~/dataset/imagenet/', subset=True, subset_size=1024):
-        if self.DEFAULT_IMAGENET_PATH:
-            path = self.DEFAULT_IMAGENET_PATH
+    def _evaluate(self, path='~/dataset/imagenet_1k/', subset=False, subset_size=1024):
         data_path = os.path.join(path, 'val')
         imagenet_data = datasets.ImageFolder(
             data_path,
@@ -408,6 +410,25 @@ class OnceForAllSearchSpace(Graph):
                 _, predicted = torch.max(output.data, 1)
                 correct += (predicted == labels).sum().item()
         accuracy = correct / total * 100
+        return accuracy
+
+    @torch.no_grad()
+    def evaluate(self, dataset_api=None):
+
+        self.set_weights()  # TODO not nice
+        self.to(self.device)
+        data_loader = dataset_api['data_loader']
+        total = len(data_loader.dataset)
+        correct = 0
+        # self.eval()
+        for images, labels in data_loader:
+            images, labels = images.to(self.device), labels.to(self.device)
+            output = self(images)
+            _, predicted = torch.max(output.data, 1)
+            correct += (predicted == labels).sum().item()
+        accuracy = correct / total * 100
+        self.to()
+        print(accuracy)
         return accuracy
 
     @staticmethod
@@ -439,6 +460,42 @@ class OnceForAllSearchSpace(Graph):
                 e.append(expand)
         return d, k, e
 
+    def get_active_conf_dict(self, resolution=224):
+        d, ks, e = self.get_active_config()
+        out = {
+            "ks": ks,
+            "e": e,
+            "d": d,
+            "r": [resolution]
+        }
+        return out
+
+    def encode_str(self) -> str:
+        d, k, e = self.get_active_config()
+        r = 224
+        one_hot = spec2feats(k, e, d, r).numpy().astype(int)
+        out = ''
+        for part in (one_hot[:60], one_hot[60:120], one_hot[120:]):
+            out += ''.join(str(s) for s in part)
+        return out
+
+    def get_model_size(self):
+        """
+        Returns model size in mb
+        """
+        size_all_mb = 0.0
+        # First block
+        size_all_mb += self.edges[1, 2].op.size()
+        # Adaptive layers
+        d, _, _ = self.get_active_config()
+        for depth, start_node in zip(d, self.block_start_nodes):
+            for n in range(depth):
+                layer = self.edges[start_node + n, start_node + n + 1].op
+                size_all_mb += layer.size()
+        # Last block
+        size_all_mb += self.edges[31, 32].op.size()
+        return size_all_mb
+
     def to(self, device=torch.device('cpu')):
         """
         Helper function, that moves the graph to a specific device
@@ -460,26 +517,6 @@ class OnceForAllSearchSpace(Graph):
             if isinstance(layer, OFALayer):
                 layer = layer.ofa_conv.res_block
             layer.eval()
-
-    def get_model_size(self):
-        """
-        Returns model size in mb
-        """
-        size_all_mb = 0.0
-        # First block
-        size_all_mb += self.edges[1, 2].op.size()
-
-        # Adaptive layers
-        d, _, _ = self.get_active_config()
-        for depth, start_node in zip(d, self.block_start_nodes):
-            for n in range(depth):
-                layer = self.edges[start_node + n, start_node + n + 1].op
-                size_all_mb += layer.size()
-
-        # Last block
-        size_all_mb += self.edges[31, 32].op.size()
-
-        return size_all_mb
 
     def parameters(self, recurse: bool = True) -> Iterator[Parameter]:
         edges = [(1, 2)]

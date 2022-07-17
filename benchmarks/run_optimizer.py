@@ -29,15 +29,17 @@ def run_optimizer(config_file, nas_optimizer):
     search_space.set_weights()
 
     optimizer = nas_optimizer(config)
-    # dataset_api = get_dataset_api(config.search_space, config.dataset)
-    optimizer.adapt_search_space(search_space)
+    dataset_api = get_dataset_api(config.search_space, config.dataset)
+    optimizer.adapt_search_space(search_space, None, dataset_api)
 
     trainer = Trainer(optimizer, config, lightweight_output=True)
     trainer.search()
-    trainer.evaluate()
+    trainer.evaluate(dataset_api=dataset_api)
 
     for hndlr in logger.handlers:
         logger.removeHandler(hndlr)
+
+    dataset_api.close()
 
 
 if __name__ == "__main__":
