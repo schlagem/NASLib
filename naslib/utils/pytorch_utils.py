@@ -34,7 +34,7 @@ def measure_net_latency(
         if get_net_device(net) != torch.device("cuda"):
             if not clean:
                 print("move net to gpu for measuring gpu latency")
-            net = net.to(torch.device("cuda"))
+            net = copy.deepcopy(net).to(torch.device("cuda"))
     else:
         raise NotImplementedError
     images = torch.zeros(data_shape, device=get_net_device(net))

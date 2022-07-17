@@ -385,11 +385,21 @@ class OnceForAllSearchSpace(Graph):
         return -1
 
     def _evaluate(self, path='~/dataset/imagenet_1k/'):
+        def ofa_transform(image_size=None):
+            if image_size is None:
+                image_size = 224
+            return transforms.Compose([
+                transforms.Resize(int(math.ceil(image_size / 0.875))),
+                transforms.CenterCrop(image_size),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+            )
+
         data_path = os.path.join(path, 'val')
         data_loader = torch.utils.data.DataLoader(
             imagenet_data=datasets.ImageFolder(
                 data_path,
-                self._ofa_transform()
+                ofa_transform()
             ),
             batch_size=256,  # ~5GB on gpu memory
             shuffle=False,
@@ -409,34 +419,19 @@ class OnceForAllSearchSpace(Graph):
 
     @torch.no_grad()
     def evaluate(self, dataset_api=None):
+        #  self.eval() TODO why is eval() not working
         self.to(self.device)
         data_loader = dataset_api['data_loader']
         total = len(data_loader.dataset)
         correct = 0
-        self.eval()
         for images, labels in data_loader:
             images, labels = images.to(self.device), labels.to(self.device)
             output = self(images)
             _, predicted = torch.max(output.data, 1)
             correct += (predicted == labels).sum().item()
         accuracy = correct / total * 100
-        # self.to()
-        print(accuracy)
+        self.to()
         return accuracy
-
-    @staticmethod
-    def _ofa_transform(image_size=None):
-        if image_size is None:
-            image_size = 224
-        normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
-        return transforms.Compose([
-            transforms.Resize(int(math.ceil(image_size / 0.875))),
-            transforms.CenterCrop(image_size),
-            transforms.ToTensor(),
-            normalize]
-        )
 
     def get_active_config(self):
         d, k, e = [], [], []
