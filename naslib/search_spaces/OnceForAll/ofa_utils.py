@@ -116,10 +116,10 @@ class OFADatasetAPI(object):
                 transform=build_val_transform(224)
             ),
             batch_size=250,  # test batch size
-            # num_workers=16,  # number of workers for the data loader
+            num_workers=16,  # number of workers for the data loader
             #  shuffle=True, originally in the code, but why?
             pin_memory=True,
-            # drop_last=False,
+            drop_last=False,
         )
         self.items["data_loader"] = data_loader
 
