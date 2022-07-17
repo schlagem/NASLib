@@ -23,6 +23,5 @@ a = [5, 0, 3, 3, 7, 3, 5, 2, 4, 7, 6, 8, 8, 1, 6, 7, 7, 8, 1, 5, 2, 2, 1, 2, 1]
 ds_api = OFADatasetAPI()
 ss = OnceForAllSearchSpace()
 ss.set_weights()
-ss.set_op_indices(a)
 print(ss.evaluate(ds_api))
 

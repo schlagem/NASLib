@@ -370,11 +370,10 @@ class OnceForAllSearchSpace(Graph):
                 if arch in lut:
                     accuracy = lut[arch]
                 else:
-                    print(self.get_op_indices())
                     accuracy = self.evaluate(dataset_api)
                     lut[arch] = accuracy
             else:
-                accuracy = self.evaluate(dataset_api)
+                accuracy = self._evaluate()
             return accuracy
         elif metric == Metric.TEST_LOSS:
             return -1
@@ -385,17 +384,13 @@ class OnceForAllSearchSpace(Graph):
 
         return -1
 
-    def _evaluate(self, path='~/dataset/imagenet_1k/', subset=False, subset_size=1024):
+    def _evaluate(self, path='~/dataset/imagenet_1k/'):
         data_path = os.path.join(path, 'val')
-        imagenet_data = datasets.ImageFolder(
-            data_path,
-            self._ofa_transform()
-        )
-        if subset:
-            imagenet_data =\
-                torch.utils.data.Subset(imagenet_data, np.random.randint(0, len(imagenet_data), subset_size))
         data_loader = torch.utils.data.DataLoader(
-            imagenet_data,
+            imagenet_data=datasets.ImageFolder(
+                data_path,
+                self._ofa_transform()
+            ),
             batch_size=256,  # ~5GB on gpu memory
             shuffle=False,
             pin_memory=True
@@ -414,20 +409,18 @@ class OnceForAllSearchSpace(Graph):
 
     @torch.no_grad()
     def evaluate(self, dataset_api=None):
-
-        self.set_weights()  # TODO not nice
         self.to(self.device)
         data_loader = dataset_api['data_loader']
         total = len(data_loader.dataset)
         correct = 0
-        # self.eval()
+        self.eval()
         for images, labels in data_loader:
             images, labels = images.to(self.device), labels.to(self.device)
             output = self(images)
             _, predicted = torch.max(output.data, 1)
             correct += (predicted == labels).sum().item()
         accuracy = correct / total * 100
-        self.to()
+        # self.to()
         print(accuracy)
         return accuracy
 
