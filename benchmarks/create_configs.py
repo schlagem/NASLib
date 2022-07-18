@@ -154,6 +154,7 @@ def main(args):
                            'cutout_prob': 1.0,
                            'train_portion': 0.7,
                            'constraint': args.constraint,
+                           'efficiency': args.efficiency,
                            'seed': i,
                            }
             }
@@ -166,11 +167,11 @@ def main(args):
         folder = f'{args.out_dir}/{args.dataset}/configs/nas_predictors'
         os.makedirs(folder, exist_ok=True)
         args.start_seed = int(args.start_seed)
-        args.trials = int(args.trials)
+        args.trials = len(args.efficiency)
 
         for i in range(args.start_seed, args.start_seed + args.trials):
             config = {
-                'seed': i,
+                'seed': args.start_seed,
                 'search_space': args.search_space,
                 'dataset': args.dataset,
                 'optimizer': args.optimizer,
@@ -197,12 +198,12 @@ def main(args):
                            'cutout_prob': 1.0,
                            'train_portion': 0.7,
                            'constraint': args.constraint,
-                           'efficiency': 0,
-                           'seed': i,
+                           'efficiency': args.efficiency[i],
+                           'seed': args.start_seed,
                            }
             }
 
-            path = folder + f'/config_{args.optimizer}_{args.predictor}_{args.constraint}_{i}.yaml'
+            path = folder + f'/config_{args.optimizer}_{args.predictor}_{args.constraint}_{args.start_seed}_{i+1}.yaml'
             with open(path, 'w') as fh:
                 yaml.dump(config, fh)
 
@@ -229,7 +230,8 @@ if __name__ == "__main__":
     parser.add_argument("--config_type", type=str, default='nas', help="nas or predictor?")
     parser.add_argument("--search_space", type=str, default='nasbench201', help="nasbench201 or darts?")
     parser.add_argument("--experiment_type", type=str, default='single', help="type of experiment")
-    parser.add_argument("--constraint", type=str, default='None', help="type of constraint")
+    parser.add_argument("--constraint", type=str, default='', help="type of constraint")
+    parser.add_argument("--efficiency", type=float, nargs='*', default=0, help="size of constraint")
 
     args = parser.parse_args()
 

@@ -28,14 +28,6 @@ def run_optimizer(config_file, nas_optimizer):
     search_space = OFA()
     search_space.set_weights()
 
-    if config.search.constraint == 'latency':
-        efficiency, _ = measure_net_latency(search_space)
-    elif config.search.constraint == 'parameters':
-        efficiency = search_space.get_model_size()
-
-    if config.search.constraint:
-        config.search.efficiency = efficiency / 2
-
     optimizer = nas_optimizer(config)
     dataset_api = get_dataset_api(config.search_space, config.dataset)
     optimizer.adapt_search_space(search_space, None, dataset_api)
@@ -43,9 +35,6 @@ def run_optimizer(config_file, nas_optimizer):
     trainer = Trainer(optimizer, config, lightweight_output=True)
     trainer.search()
     trainer.evaluate(dataset_api=dataset_api)
-
-    for hndlr in logger.handlers:
-        logger.removeHandler(hndlr)
 
     dataset_api.close()
 
@@ -57,4 +46,5 @@ if __name__ == "__main__":
 
     for file in sorted(list_of_config_files):
         config_file_path = join(path, file)
+        print(config_file_path)
         run_optimizer(config_file=config_file_path, nas_optimizer=optim)
