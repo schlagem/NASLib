@@ -94,6 +94,11 @@ class FirstBlock(AbstractPrimitive):
     def params(self):
         return list(self.first_conv.parameters()) + list(self.first_block.parameters())
 
+    def named_modules(self, memo=None, prefix='', remove_duplicate=True):
+        layers = [self.first_conv, self.first_block]
+        for layer in layers:
+            yield layer.named_modules(memo, prefix, remove_duplicate)
+
 
 class FinalBlock(AbstractPrimitive):
 
@@ -170,6 +175,11 @@ class FinalBlock(AbstractPrimitive):
                list(self.feature_mix_layer.parameters()) + \
                list(self.classifier.parameters())
 
+    def named_modules(self, memo=None, prefix='', remove_duplicate=True):
+        layers = [self.final_expand_layer, self.feature_mix_layer, self.classifier]
+        for layer in layers:
+            yield layer.named_modules(memo, prefix, remove_duplicate)
+
 
 class OFAConv:
 
@@ -240,3 +250,8 @@ class OFALayer(AbstractPrimitive):
                                                                              preserve_weight=True),
                               copy.deepcopy(self.ofa_conv.res_block.shortcut))
         return block.parameters()
+
+    def named_modules(self, memo=None, prefix='', remove_duplicate=True):
+        self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
+        self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
+        yield self.ofa_conv.res_block.named_modules(memo, prefix, remove_duplicate)

@@ -519,6 +519,25 @@ class OnceForAllSearchSpace(Graph):
             for p in layer.params():
                 yield p
 
+    def named_modules(self, memo=None, prefix='', remove_duplicate=True):
+        edges = [(1, 2)]
+        # Adaptive layers
+        d, _, _ = self.get_active_config()
+        for start_node in self.block_start_nodes:
+            for n in range(4):
+                edges += [(start_node + n, start_node + n + 1)]
+        # Last block
+        edges += [(31, 32)]
+        num = 0
+        for e in edges:
+            layer = self.edges[e].op
+            submodule_prefix = str(num) + prefix
+            for m in layer.named_modules(memo, submodule_prefix, remove_duplicate):
+                # submodule_prefix = prefix + ('.' if prefix else '') + name
+                for mod in m:
+                    yield mod
+            num += 1
+
     @staticmethod
     def get_type():
         return "ofa"

@@ -10,6 +10,34 @@ import pickle
 from naslib.utils.utils import get_project_root
 from ofa.utils import download_url
 
+from ofa.imagenet_classification.elastic_nn.modules.dynamic_op import DynamicBatchNorm2d
+import torch.nn.functional as F
+
+
+class AverageMeter(object):
+    """
+    Computes and stores the average and current value
+    Copied from: https://github.com/pytorch/examples/blob/master/imagenet/main.py
+    """
+
+    def __init__(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
 
 def construct_maps(keys):
     d = dict()
@@ -23,6 +51,72 @@ def construct_maps(keys):
 ks_map = construct_maps(keys=(3, 5, 7))
 ex_map = construct_maps(keys=(3, 4, 6))
 dp_map = construct_maps(keys=(2, 3, 4))
+
+
+
+def set_running_statistics(search_space, data_loader):
+    """
+    # This function adjusts the Batch norms in order to adapt to the validation Batchsize
+    """
+    bn_mean = {}
+    bn_var = {}
+
+    forward_search_space = copy.deepcopy(search_space)
+    for name, m in forward_search_space.named_modules():
+        if isinstance(m, nn.BatchNorm2d):
+            bn_mean[name] = AverageMeter()
+            bn_var[name] = AverageMeter()
+
+            def new_forward(bn, mean_est, var_est):
+                def lambda_forward(x):
+                    batch_mean = (
+                        x.mean(0, keepdim=True).mean(2, keepdim=True).mean(3, keepdim=True)
+                    )  # 1, C, 1, 1
+                    batch_var = (x - batch_mean) * (x - batch_mean)
+                    batch_var = (
+                        batch_var.mean(0, keepdim=True).mean(2, keepdim=True).mean(3, keepdim=True)
+                    )
+
+                    batch_mean = torch.squeeze(batch_mean)
+                    batch_var = torch.squeeze(batch_var)
+
+                    mean_est.update(batch_mean.data, x.size(0))
+                    var_est.update(batch_var.data, x.size(0))
+
+                    # bn forward using calculated mean & var
+                    _feature_dim = batch_mean.size(0)
+                    return F.batch_norm(
+                        x,
+                        batch_mean,
+                        batch_var,
+                        bn.weight[:_feature_dim],
+                        bn.bias[:_feature_dim],
+                        False,
+                        0.0,
+                        bn.eps,
+                    )
+
+                return lambda_forward
+
+            m.forward = new_forward(m, bn_mean[name], bn_var[name])
+
+    if len(bn_mean) == 0:
+        # skip if there is no batch normalization layers in the network
+        return
+
+    with torch.no_grad():
+        DynamicBatchNorm2d.SET_RUNNING_STATISTICS = True
+        for images, labels in data_loader:
+            images = images.to(torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
+            forward_search_space(images)
+        DynamicBatchNorm2d.SET_RUNNING_STATISTICS = False
+
+    for name, m in search_space.named_modules():
+        if name in bn_mean and bn_mean[name].count > 0:
+            feature_dim = bn_mean[name].avg.size(0)
+            assert isinstance(m, nn.BatchNorm2d)
+            m.running_mean.data[:feature_dim].copy_(bn_mean[name].avg)
+            m.running_var.data[:feature_dim].copy_(bn_var[name].avg)
 
 
 def spec2feats(ks_list, ex_list, d_list, r):
