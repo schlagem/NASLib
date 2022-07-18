@@ -2,7 +2,7 @@ import logging
 from os import listdir
 from os.path import isfile, join
 
-from naslib.optimizers import Bananas, RegularizedEvolution as RE, RandomSearch as RS
+from naslib.optimizers import Bananas, RE, RS
 from naslib.search_spaces import OnceForAllSearchSpace as OFA
 from naslib.defaults.trainer import Trainer
 from naslib.utils import utils, setup_logger, get_dataset_api, measure_net_latency

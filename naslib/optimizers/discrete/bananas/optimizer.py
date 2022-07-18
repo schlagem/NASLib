@@ -89,7 +89,7 @@ class Bananas(MetaOptimizer):
             )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.search_space.clone()
             if self.constraint:
-                self.get_valid_model_under_constraint(model)
+                self.get_valid_arch_under_constraint(model)
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
@@ -161,7 +161,7 @@ class Bananas(MetaOptimizer):
 
                     for _ in range(self.num_candidates):
                         arch = self.search_space.clone()
-                        if self.constrained:
+                        if self.constraint:
                             arch = self.get_valid_arch(arch)
                         else:
                             arch.sample_random_architecture(dataset_api=self.dataset_api)
@@ -183,7 +183,7 @@ class Bananas(MetaOptimizer):
                             candidate = arch.clone()
                             for edit in range(int(self.max_mutations)):
                                 arch = self.search_space.clone()
-                                if self.constrained:
+                                if self.constraint:
                                     arch = self.get_valid_arch(arch, candidate)
                                 else:
                                     arch.mutate(candidate, dataset_api=self.dataset_api)

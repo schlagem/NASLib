@@ -174,7 +174,7 @@ class OnceForAllSearchSpace(Graph):
         # TODO fix if needed dont know what it does
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
-    def mutate(self, parent=None):
+    def mutate(self, parent=None, dataset_api=None):
         if parent:
             parent_conf = parent.get_op_indices()
             self.set_op_indices(parent_conf)

@@ -1,5 +1,9 @@
+import collections
 import numpy as np
 import torch
+
+from naslib.predictors.ensemble import Ensemble
+from naslib.optimizers.discrete.bananas.acquisition_functions import acquisition_function
 
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.search_spaces.core.query_metrics import Metric
@@ -131,3 +135,75 @@ class RandomSearch(MetaOptimizer):
 
     def get_checkpointables(self):
         return {"model": self.history}
+
+
+class RS(RandomSearch):
+    def __init__(self, config):
+        super().__init__(config)
+        self.config = config
+        self.num_ensemble = config.search.num_ensemble
+        self.predictor_type = config.search.predictor_type
+        self.acq_fn_type = config.search.acq_fn_type
+        self.acq_fn_optimization = config.search.acq_fn_optimization
+        self.sample_size = config.search.sample_size
+        self.population_size = config.search.population_size
+        self.acq_fn = None
+        self.population = collections.deque(maxlen=self.population_size)
+
+    def new_epoch(self, epoch):
+        if epoch < self.population_size:
+            model = torch.nn.Module()
+            model.arch = self.search_space.clone()
+            if self.constraint:
+                self.get_valid_arch_under_constraint(model)
+            else:
+                model.arch.sample_random_architecture(dataset_api=self.dataset_api)
+            model.accuracy = model.arch.query(self.performance_metric,
+                                              self.dataset,
+                                              dataset_api=self.dataset_api)
+            self.population.append(model)
+            self.sampled_archs.append(model)
+            self._update_history(model)
+
+        # CREATE AND TRAIN PERFORMANCE PREDICTOR
+        else:
+            if epoch % 10 == 0:
+                xtrain = [m.arch for m in self.sampled_archs]
+                ytrain = [m.arch.query(Metric.TEST_ACCURACY, dataset_api=self.dataset_api) for m in self.sampled_archs]
+                ensemble = Ensemble(num_ensemble=self.num_ensemble,
+                                    ss_type=self.ss_type,
+                                    predictor_type=self.predictor_type,
+                                    config=self.config)
+                ensemble.fit(xtrain, ytrain)
+                self.acq_fn = acquisition_function(ensemble=ensemble,
+                                                   ytrain=ytrain,
+                                                   acq_fn_type=self.acq_fn_type)
+
+            sample = []
+            while len(sample) < self.sample_size:
+                candidate = np.random.choice(list(self.population))
+                sample.append(candidate)
+
+            # choose model with highest predicted performance as parent
+            # pred_perf = [self.acq_fn(encoding.arch) for encoding in sample]
+            # parent = sample[np.argmax(pred_perf)]
+
+            child = torch.nn.Module()
+            child.arch = self.search_space.clone()
+            if self.constraint:
+                self.get_valid_arch_under_constraint(child)
+            else:
+                child.arch.sample_random_architecture(dataset_api=self.dataset_api)
+            child.accuracy = self.acq_fn(child.arch)
+            self.population.append(child)
+            self.sampled_archs.append(child)
+            self._update_history(child)
+
+    def adapt_search_space(self, search_space, scope=None, dataset_api=None):
+        assert (
+            search_space.QUERYABLE
+        ), "Regularized evolution is currently only implemented for benchmarks."
+        self.search_space = search_space.clone()
+        self.ss_type = 'ofa'
+        self.scope = scope if scope else search_space.OPTIMIZER_SCOPE
+        self.dataset_api = dataset_api
