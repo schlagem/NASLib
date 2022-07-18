@@ -9,16 +9,14 @@ import math
 
 ss = OnceForAllSearchSpace()
 ss.set_weights()
-ss.eval()
+# ss.eval()
 
 print(ss._evaluate())
-
-
 
 net_id = "ofa_mbv3_d234_e346_k357_w1.0"
 ofa_network = ofa_net(net_id, pretrained=True)
 ofa_network.cuda()
-ofa_network.eval()
+# ofa_network.eval()
 
 
 def ofa_transform(image_size=None):
@@ -60,6 +58,7 @@ print(ss._evaluate())
 
 depths, k, e = ss.get_active_config()
 ofa_network.set_active_subnet(ks=k, e=e, d=depths)
+ofa_network = ofa_network.get_active_subnet()
 ofa_network.eval()
 correct = 0
 total = len(data_loader.dataset)
