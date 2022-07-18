@@ -46,9 +46,8 @@ class RandomSearch(MetaOptimizer):
         self.sampled_archs = []
         self.history = torch.nn.ModuleList()
 
-        self.constrained = config.search.constrained
-        self.model_size = config.search.model_size
-        self.latency = config.search.latency
+        self.constraint = config.search.constraint
+        self.efficiency = config.search.efficiency
 
     def adapt_search_space(self, search_space, scope=None, dataset_api=None):
         assert (
@@ -62,11 +61,10 @@ class RandomSearch(MetaOptimizer):
         """
         Sample a new architecture to train.
         """
-
         model = torch.nn.Module()  # hacky way to get arch and accuracy checkpointable
         model.arch = self.search_space.clone()
-        if self.constrained:
-            self.get_valid_arch_under_constraints(model)
+        if self.constraint:
+            self.get_valid_arch_under_constraint(model)
         else:
             model.arch.sample_random_architecture(dataset_api=self.dataset_api)
         model.accuracy = model.arch.query(
@@ -75,16 +73,17 @@ class RandomSearch(MetaOptimizer):
             epoch=self.fidelity,
             dataset_api=self.dataset_api,
         )
-
         self.sampled_archs.append(model)
         self._update_history(model)
 
-    def get_valid_arch_under_constraints(self, model):
+    def get_valid_arch_under_constraint(self, model):
         for i in range(100):
             model.arch.sample_random_architecture()
-            latency, _ = measure_net_latency(model.arch)
-            model_size = model.arch.get_model_size()
-            if latency <= self.latency and model_size <= self.model_size:
+            if self.constraint == 'latency':
+                efficiency, _ = measure_net_latency(model.arch)
+            else:
+                efficiency = model.arch.get_model_size()
+            if efficiency <= self.efficiency:
                 break
 
     def _update_history(self, child):

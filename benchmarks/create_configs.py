@@ -153,14 +153,56 @@ def main(args):
                            'cutout_length': 16,
                            'cutout_prob': 1.0,
                            'train_portion': 0.7,
-                           'constrained': True,
-                           'model_size': 1e10,
-                           'latency': 1000,
+                           'constraint': args.constraint,
                            'seed': i,
                            }
             }
 
             path = folder + f'/config_{args.optimizer}_{args.predictor}_{i}.yaml'
+            with open(path, 'w') as fh:
+                yaml.dump(config, fh)
+
+    elif args.config_type == 'nas_predictor_constraint':
+        folder = f'{args.out_dir}/{args.dataset}/configs/nas_predictors'
+        os.makedirs(folder, exist_ok=True)
+        args.start_seed = int(args.start_seed)
+        args.trials = int(args.trials)
+
+        for i in range(args.start_seed, args.start_seed + args.trials):
+            config = {
+                'seed': i,
+                'search_space': args.search_space,
+                'dataset': args.dataset,
+                'optimizer': args.optimizer,
+                'out_dir': args.out_dir,
+                'search': {'predictor_type': args.predictor,
+                           'epochs': args.epochs,
+                           'checkpoint_freq': args.checkpoint_freq,
+                           'fidelity': 200,
+                           'sample_size': 10,
+                           'population_size': 30,
+                           'num_init': 20,
+                           'k': 20,
+                           'num_ensemble': 3,
+                           'acq_fn_type': 'its',
+                           'acq_fn_optimization': 'random_sampling',
+                           'encoding_type': 'adjacency_one_hot',
+                           'num_arches_to_mutate': 5,
+                           'max_mutations': 1,
+                           'num_candidates': 200,
+                           'batch_size': 256,
+                           'data_size': 25000,
+                           'cutout': False,
+                           'cutout_length': 16,
+                           'cutout_prob': 1.0,
+                           'train_portion': 0.7,
+                           'constraint': args.constraint,
+                           'efficiency': 0,
+                           'seed': i,
+                           }
+            }
+
+            path = folder + f'/config_{args.optimizer}_{args.predictor}_{args.constraint}_{i}.yaml'
             with open(path, 'w') as fh:
                 yaml.dump(config, fh)
 
@@ -187,6 +229,7 @@ if __name__ == "__main__":
     parser.add_argument("--config_type", type=str, default='nas', help="nas or predictor?")
     parser.add_argument("--search_space", type=str, default='nasbench201', help="nasbench201 or darts?")
     parser.add_argument("--experiment_type", type=str, default='single', help="type of experiment")
+    parser.add_argument("--constraint", type=str, default='None', help="type of constraint")
 
     args = parser.parse_args()
 

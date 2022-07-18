@@ -48,9 +48,8 @@ class Bananas(MetaOptimizer):
         self.num_candidates = config.search.num_candidates
         self.max_zerocost = 1000
 
-        self.constrained = config.search.constrained
-        self.model_size = config.search.model_size
-        self.latency = config.search.latency
+        self.constraint = config.search.constraint
+        self.efficiency = config.search.efficiency
 
         self.train_data = []
         self.next_batch = []
@@ -89,8 +88,8 @@ class Bananas(MetaOptimizer):
                 torch.nn.Module()
             )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.search_space.clone()
-            if self.constrained:
-                self.get_valid_model_under_constraints(model)
+            if self.constraint:
+                self.get_valid_model_under_constraint(model)
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             model.accuracy = model.arch.query(
@@ -163,7 +162,7 @@ class Bananas(MetaOptimizer):
                     for _ in range(self.num_candidates):
                         arch = self.search_space.clone()
                         if self.constrained:
-                            arch = self.create_constrained_arch(arch)
+                            arch = self.get_valid_arch(arch)
                         else:
                             arch.sample_random_architecture(dataset_api=self.dataset_api)
                         candidates.append(arch)
@@ -185,7 +184,7 @@ class Bananas(MetaOptimizer):
                             for edit in range(int(self.max_mutations)):
                                 arch = self.search_space.clone()
                                 if self.constrained:
-                                    arch = self.create_constrained_arch(arch, candidate)
+                                    arch = self.get_valid_arch(arch, candidate)
                                 else:
                                     arch.mutate(candidate, dataset_api=self.dataset_api)
                                 candidate = arch
@@ -230,26 +229,27 @@ class Bananas(MetaOptimizer):
             self._update_history(model)
             self.train_data.append(model)
 
-    def get_valid_model_under_constraints(self, model, parent=None):
+    def get_valid_arch_under_constraint(self, model):
         for i in range(100):
-            if parent:
-                model.arch.mutate(parent.arch)
+            model.arch.sample_random_architecture()
+            if self.constraint == 'latency':
+                efficiency, _ = measure_net_latency(model.arch)
             else:
-                model.arch.sample_random_architecture()
-            latency, _ = measure_net_latency(model.arch)
-            model_size = model.arch.get_model_size()
-            if latency <= self.latency and model_size <= self.model_size:
+                efficiency = model.arch.get_model_size()
+            if efficiency <= self.efficiency:
                 break
 
-    def create_constrained_arch(self, arch, parent=None):
+    def get_valid_arch(self, arch, parent=None):
         for i in range(100):
             if parent:
                 arch.mutate(parent)
             else:
                 arch.sample_random_architecture()
-            latency, _ = measure_net_latency(arch)
-            model_size = arch.get_model_size()
-            if latency <= self.latency and model_size <= self.model_size:
+            if self.constraint == 'latency':
+                efficiency, _ = measure_net_latency(arch)
+            else:
+                efficiency = arch.get_model_size()
+            if efficiency <= self.efficiency:
                 return arch
 
     def _update_history(self, child):
