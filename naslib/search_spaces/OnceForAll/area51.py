@@ -5,13 +5,18 @@ import os
 import pprint
 from ofa_utils import OFADatasetAPI
 from graph import OnceForAllSearchSpace
+from naslib.predictors.utils import encodings
 import time
 
-root = get_project_root()
-path = os.path.join(root, "data", "ofa.pickle")
+ss = OnceForAllSearchSpace()
+print(ss.encode())
+print(encodings.encode_adjacency_one_hot_ofa(ss))
 
-data = pickle.load(open(path, 'rb'))
-print(len(data))
+# root = get_project_root()
+# path = os.path.join(root, "data", "ofa.pickle")
+#
+# data = pickle.load(open(path, 'rb'))
+# print(len(data))
 
 # api = OFADatasetAPI()
 #
