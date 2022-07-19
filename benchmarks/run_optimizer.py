@@ -46,5 +46,4 @@ if __name__ == "__main__":
 
     for file in sorted(list_of_config_files):
         config_file_path = join(path, file)
-        print(config_file_path)
         run_optimizer(config_file=config_file_path, nas_optimizer=optim)

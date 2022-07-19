@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision import transforms, datasets
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 import copy
 import math
@@ -51,7 +52,6 @@ def construct_maps(keys):
 ks_map = construct_maps(keys=(3, 5, 7))
 ex_map = construct_maps(keys=(3, 4, 6))
 dp_map = construct_maps(keys=(2, 3, 4))
-
 
 
 def set_running_statistics(search_space, data_loader):
@@ -201,40 +201,65 @@ def build_val_transform(size):
 
 
 class OFADatasetAPI(object):
-    def __init__(self, dataset="imagenet", data_path=r'~/dataset/imagenet_1k'):
-        self.ofa_data_path = ''
+    def __init__(self, dataset_path=None, data_path=None):
+        if dataset_path:
+            self.datasets_path = dataset_path
+        else:
+            root = get_project_root().parent
+            self.datasets_path = os.path.join(root, ".datasets")
+        if data_path:
+            self.data_path = data_path
+        else:
+            root = get_project_root()
+            self.data_path = os.path.join(root, "data")
         self.items = {}
-        data_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(
-                root=os.path.join(data_path, 'val'),
-                transform=build_val_transform(224)
-            ),
-            batch_size=250,  # test batch size
-            num_workers=16,  # number of workers for the data loader
-            #  shuffle=True, originally in the code, but why?
-            pin_memory=True,
-            drop_last=False,
-        )
-        self.items["data_loader"] = data_loader
 
         acc_pred = AccuracyPredictor()
         self.items["accuracy_predictor"] = acc_pred
 
-        self.get_imagenet1k_pickle()
+        self.get_imagenet1k_subset()
+        self.get_imagenet10k_subset()
+        self.get_ofa_pickle()
 
-    def get_imagenet1k_pickle(self):
-        self.ofa_data_path = os.path.join(get_project_root(), "data", "ofa_1k.pickle")
-        if os.path.exists(self.ofa_data_path):
-            with open(self.ofa_data_path, "rb") as f:
+    def get_imagenet1k_subset(self):
+        path = os.path.join(self.datasets_path, "imagenet1k", "val")
+        data_loader = DataLoader(
+            datasets.ImageFolder(
+                root=path,
+                transform=build_val_transform(224)
+            ),
+            batch_size=250,  # test batch size
+            num_workers=4,  # number of workers for the data loader
+            pin_memory=True,
+        )
+        self.items["dataloader_test"] = data_loader
+
+    def get_ofa_pickle(self):
+        self.data_path = os.path.join(get_project_root(), "data", "ofa.pickle")
+        if os.path.exists(self.data_path):
+            with open(self.data_path, "rb") as f:
                 data = pickle.load(f)
             f.close()
         else:
             data = {}
-        self.items['ofa_data'] = data
+        self.items['lut'] = data
+
+    def get_imagenet10k_subset(self):
+        path = os.path.join(self.datasets_path, "imagenet10k", "val")
+        data_loader = DataLoader(
+            datasets.ImageFolder(
+                root=path,
+                transform=build_val_transform(224)
+            ),
+            batch_size=250,  # test batch size
+            num_workers=4,  # number of workers for the data loader
+            pin_memory=True,
+        )
+        self.items["dataloader_val"] = data_loader
 
     def close(self):
-        data = self.items['ofa_data']
-        with open(self.ofa_data_path, "wb") as f:
+        data = self.items['lut']
+        with open(self.data_path, "wb") as f:
             pickle.dump(data, f)
         f.close()
 

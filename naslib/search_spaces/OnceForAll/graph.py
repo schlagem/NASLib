@@ -344,9 +344,11 @@ class OnceForAllSearchSpace(Graph):
             full_lc=False,
             dataset_api=None,
     ):
-        """
-        TODO params
-        """
+        metric_to_ofa = {
+            Metric.VAL_ACCURACY: "val_acc",
+            Metric.TEST_ACCURACY: "val_acc",
+        }
+        metr = metric_to_ofa[metric]
         if metric == Metric.TRAIN_ACCURACY:
             return -1
         elif metric == Metric.TRAIN_LOSS:
@@ -355,9 +357,14 @@ class OnceForAllSearchSpace(Graph):
             return -1
         elif metric == Metric.VAL_ACCURACY:
             if dataset_api:
-                pred = dataset_api["accuracy_predictor"]
-                config = self.get_active_conf_dict()
-                return pred.predict_accuracy([config]).item() * 100
+                lut = dataset_api['lut']
+                arch = self.encode_str()
+                if lut.setdefault(arch, {}) and lut[arch].get(metr, 0):
+                    return lut[arch][metr]
+                else:
+                    accuracy = self.evaluate(dataset_api, metric)
+                    lut[arch][metr] = accuracy
+                    return accuracy
             return -1
         elif metric == Metric.VAL_LOSS:
             return -1
@@ -365,16 +372,15 @@ class OnceForAllSearchSpace(Graph):
             return -1
         elif metric == Metric.TEST_ACCURACY:
             if dataset_api:
-                lut = dataset_api['ofa_data']
+                lut = dataset_api['lut']
                 arch = self.encode_str()
-                if arch in lut:
-                    accuracy = lut[arch]
+                if lut.setdefault(arch, {}) and lut[arch].get(metr, 0):
+                    return lut[arch][metr]
                 else:
-                    accuracy = self.evaluate(dataset_api)
-                    lut[arch] = accuracy
-            else:
-                accuracy = self._evaluate()
-            return accuracy
+                    accuracy = self.evaluate(dataset_api, metric)
+                    lut[arch][metr] = accuracy
+                    return accuracy
+            return -1
         elif metric == Metric.TEST_LOSS:
             return -1
         elif metric == Metric.TEST_TIME:
@@ -384,43 +390,46 @@ class OnceForAllSearchSpace(Graph):
 
         return -1
 
-    def _evaluate(self, path='~/dataset/imagenet_1k/'):
-        def ofa_transform(image_size=None):
-            if image_size is None:
-                image_size = 224
-            return transforms.Compose([
-                transforms.Resize(int(math.ceil(image_size / 0.875))),
-                transforms.CenterCrop(image_size),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
-            )
-        data_path = os.path.join(path, 'val')
-        data_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(
-                data_path,
-                ofa_transform()
-            ),
-            batch_size=256,  # ~5GB on gpu memory
-            shuffle=False,
-            pin_memory=True
-        )
-        correct = 0
-        total = len(data_loader.dataset)
-        self.to(self.device)
-        with torch.no_grad():
-            for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
-                images, labels = images.to(self.device), labels.to(self.device)
-                output = self(images)
-                _, predicted = torch.max(output.data, 1)
-                correct += (predicted == labels).sum().item()
-        accuracy = correct / total * 100
-        return accuracy
+    # def _evaluate(self, path='~/dataset/imagenet_1k/'):
+    #     def ofa_transform(image_size=None):
+    #         if image_size is None:
+    #             image_size = 224
+    #         return transforms.Compose([
+    #             transforms.Resize(int(math.ceil(image_size / 0.875))),
+    #             transforms.CenterCrop(image_size),
+    #             transforms.ToTensor(),
+    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])]
+    #         )
+    #     data_path = os.path.join(path, 'val')
+    #     data_loader = torch.utils.data.DataLoader(
+    #         datasets.ImageFolder(
+    #             data_path,
+    #             ofa_transform()
+    #         ),
+    #         batch_size=256,  # ~5GB on gpu memory
+    #         shuffle=False,
+    #         pin_memory=True
+    #     )
+    #     correct = 0
+    #     total = len(data_loader.dataset)
+    #     self.to(self.device)
+    #     with torch.no_grad():
+    #         for i, (images, labels) in enumerate(tqdm(data_loader, ascii=True)):
+    #             images, labels = images.to(self.device), labels.to(self.device)
+    #             output = self(images)
+    #             _, predicted = torch.max(output.data, 1)
+    #             correct += (predicted == labels).sum().item()
+    #     accuracy = correct / total * 100
+    #     return accuracy
 
     @torch.no_grad()
-    def evaluate(self, dataset_api=None):
+    def evaluate(self, dataset_api=None, metric=None):
         #  self.eval() TODO why is eval() not working
         self.to(self.device)
-        data_loader = dataset_api['data_loader']
+        if metric == Metric.VAL_ACCURACY:
+            data_loader = dataset_api["dataloader_val"]
+        elif metric == Metric.TEST_ACCURACY:
+            data_loader = dataset_api["dataloader_test"]
         total = len(data_loader.dataset)
         correct = 0
         for images, labels in data_loader:

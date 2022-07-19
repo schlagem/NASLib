@@ -1,6 +1,6 @@
 %%bash
 optimizers=(bananas re rs)
-predictors=(mlp lgb xgb rf bayes_lin_reg gp)
+predictors=(mlp lgb xgb rf bayes_lin_reg gp none)
 constraints=(latency parameter)
 # here the max size of our net is 29.239MB and min size 13.011MB: These are 3 quartiles
 parameters_constraint=(17.068038940429688 21.12493896484375 25.181838989257812)

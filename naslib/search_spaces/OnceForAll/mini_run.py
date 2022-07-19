@@ -10,12 +10,12 @@ ss.set_weights()
 api = OFADatasetAPI()
 
 start_time = time.time()
-duration = 60 * 30
+duration = 60 * 2
 n = 1
 time_spent = time.time() - start_time
 while time_spent < duration:
     ss.sample_random_architecture()
-    ss.query(Metric.TEST_ACCURACY, dataset_api=api)
+    ss.query(Metric.VAL_ACCURACY, dataset_api=api)
     if n % 100 == 0:
         api.close()
     n += 1
