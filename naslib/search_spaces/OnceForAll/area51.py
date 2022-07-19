@@ -1,9 +1,9 @@
 from graph import OnceForAllSearchSpace
 import numpy as np
+from ofa.model_zoo import ofa_net
 from naslib.utils import measure_net_latency
 
-data = np.load('local_lut_gpu.npy', allow_pickle=True)
-print(data)
+net = ofa_net("ofa_mbv3_d234_e346_k357_w1.0")
 
 
 
