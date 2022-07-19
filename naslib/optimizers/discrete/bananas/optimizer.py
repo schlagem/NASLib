@@ -28,7 +28,7 @@ class Bananas(MetaOptimizer):
     # training the models is not implemented
     using_step_function = False
 
-    def __init__(self, config):
+    def __init__(self, config, efficiency_predictor):
         super().__init__()
         self.config = config
         self.epochs = config.search.epochs
@@ -50,6 +50,7 @@ class Bananas(MetaOptimizer):
 
         self.constraint = config.search.constraint
         self.efficiency = config.search.efficiency
+        self.efficiency_predictor = efficiency_predictor
 
         self.train_data = []
         self.next_batch = []
@@ -230,25 +231,21 @@ class Bananas(MetaOptimizer):
             self.train_data.append(model)
 
     def get_valid_arch_under_constraint(self, model):
-        for i in range(100):
+        while True:
             model.arch.sample_random_architecture()
-            if self.constraint == 'latency':
-                efficiency, _ = measure_net_latency(model.arch)
-            else:
-                efficiency = model.arch.get_model_size()
+            sample = model.arch.get_active_conf_dict()
+            efficiency = self.efficiency_predictor.predict_efficiency(sample)
             if efficiency <= self.efficiency:
                 break
 
     def get_valid_arch(self, arch, parent=None):
-        for i in range(100):
+        while True:
             if parent:
-                arch.mutate(parent)
+                arch.mutate(parent.arch)
             else:
                 arch.sample_random_architecture()
-            if self.constraint == 'latency':
-                efficiency, _ = measure_net_latency(arch)
-            else:
-                efficiency = arch.get_model_size()
+            sample = arch.get_active_conf_dict()
+            efficiency = self.efficiency_predictor.predict_efficiency(sample)
             if efficiency <= self.efficiency:
                 return arch
 

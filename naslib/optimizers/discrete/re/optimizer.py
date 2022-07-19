@@ -154,9 +154,11 @@ class RegularizedEvolution(MetaOptimizer):
 
 class RE(RegularizedEvolution):
 
-    def __init__(self, config):
+    def __init__(self, config, efficiency_predictor):
         super().__init__(config)
         self.train_data = []
+        self.efficiency_predictor = efficiency_predictor
+        self.ss_type = "ofa"
         self.predictor = Ensemble(
             num_ensemble=self.config.search.num_ensemble,
             ss_type=self.ss_type,
@@ -167,7 +169,6 @@ class RE(RegularizedEvolution):
     def new_epoch(self, epoch):
         # This is the main method that you have to override in order to add the performance predictors
         # We sample as many architectures as we need
-        print(epoch)
         if epoch < self.population_size:
             logger.info("Start sampling architectures to fill the population")
             # If there is no scope defined, let's use the search space default one
@@ -242,3 +243,14 @@ class RE(RegularizedEvolution):
 
     def get_op_optimizer(self):
         raise NotImplementedError()
+
+    def get_valid_arch_under_constraint(self, model, parent=None):
+        while True:
+            if parent:
+                model.arch.mutate(parent.arch)
+            else:
+                model.arch.sample_random_architecture()
+            sample = model.arch.get_active_conf_dict()
+            efficiency = self.efficiency_predictor.predict_efficiency(sample)
+            if efficiency <= self.efficiency:
+                break

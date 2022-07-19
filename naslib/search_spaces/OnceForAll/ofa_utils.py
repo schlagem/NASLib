@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision import transforms, datasets
-from torch.utils.data import DataLoader, WeightedRandomSampler
+from torch.utils.data import DataLoader
 
 import copy
 import math
@@ -54,7 +54,7 @@ ex_map = construct_maps(keys=(3, 4, 6))
 dp_map = construct_maps(keys=(2, 3, 4))
 
 
-def set_running_statistics(search_space, data_loader):
+def set_running_statistics(search_space, data_loader, device):
     """
     # This function adjusts the Batch norms in order to adapt to the validation Batchsize
     """
@@ -104,10 +104,11 @@ def set_running_statistics(search_space, data_loader):
         # skip if there is no batch normalization layers in the network
         return
 
+    forward_search_space.to(device)
     with torch.no_grad():
         DynamicBatchNorm2d.SET_RUNNING_STATISTICS = True
         for images, labels in data_loader:
-            images = images.to(torch.device("cuda:0" if torch.cuda.is_available() else "cpu"))
+            images = images.to(device)
             forward_search_space(images)
         DynamicBatchNorm2d.SET_RUNNING_STATISTICS = False
 

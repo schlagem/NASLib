@@ -505,6 +505,5 @@ class EfficiencyTable:
 
 
 if __name__ == "__main__":
-    EfficiencyTable('flops')
-    EfficiencyTable('latency')
-    EfficiencyTable('parameters')
+    a = EfficiencyTable('flops')
+

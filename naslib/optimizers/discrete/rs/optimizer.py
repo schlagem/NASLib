@@ -3,7 +3,6 @@ import numpy as np
 import torch
 
 from naslib.predictors.ensemble import Ensemble
-from naslib.optimizers.discrete.bananas.acquisition_functions import acquisition_function
 
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.search_spaces.core.query_metrics import Metric
@@ -21,11 +20,11 @@ class RandomSearch(MetaOptimizer):
     using_step_function = False
 
     def __init__(
-        self,
-        config,
-        weight_optimizer=torch.optim.SGD,
-        loss_criteria=torch.nn.CrossEntropyLoss(),
-        grad_clip=None,
+            self,
+            config,
+            weight_optimizer=torch.optim.SGD,
+            loss_criteria=torch.nn.CrossEntropyLoss(),
+            grad_clip=None,
     ):
         """
         Initialize a random search optimizer.
@@ -81,7 +80,7 @@ class RandomSearch(MetaOptimizer):
         self._update_history(model)
 
     def get_valid_arch_under_constraint(self, model):
-        for i in range(100):
+        while True:
             model.arch.sample_random_architecture()
             if self.constraint == 'latency':
                 efficiency, _ = measure_net_latency(model.arch)
@@ -138,10 +137,11 @@ class RandomSearch(MetaOptimizer):
 
 
 class RS(RandomSearch):
-    def __init__(self, config):
+    def __init__(self, config, efficiency_predictor=None):
         super().__init__(config)
         self.config = config
         self.train_data = []
+        self.ss_type = 'ofa'
         self.predictor = Ensemble(
             num_ensemble=self.config.search.num_ensemble,
             ss_type=self.ss_type,
@@ -149,6 +149,7 @@ class RS(RandomSearch):
             config=self.config,
         )
         self.population_size = config.search.population_size
+        self.efficiency_predictor = efficiency_predictor
 
     def new_epoch(self, epoch):
         if epoch < self.population_size:
@@ -206,6 +207,13 @@ class RS(RandomSearch):
             search_space.QUERYABLE
         ), "Regularized evolution is currently only implemented for benchmarks."
         self.search_space = search_space.clone()
-        self.ss_type = 'ofa'
         self.scope = scope if scope else search_space.OPTIMIZER_SCOPE
         self.dataset_api = dataset_api
+
+    def get_valid_arch_under_constraint(self, model):
+        while True:
+            model.arch.sample_random_architecture()
+            sample = model.arch.get_active_conf_dict()
+            efficiency = self.efficiency_predictor.predict_efficiency(sample)
+            if efficiency <= self.efficiency:
+                break
