@@ -29,6 +29,7 @@ class OnceForAllSearchSpace(Graph):
         super().__init__()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.set_run_stats = False
         # we don't call the search space with params thus we define them here
         # for our application this should suffice
         n_classes = 1000  # ImageNet
@@ -170,6 +171,7 @@ class OnceForAllSearchSpace(Graph):
         # self.runtime_depth = [len(block_idx) for block_idx in self.block_group_info]
 
     def mutate(self, parent=None, dataset_api=None):
+        self.set_run_stats = False
         if parent:
             parent_conf = parent.get_op_indices()
             self.set_op_indices(parent_conf)
@@ -243,6 +245,7 @@ class OnceForAllSearchSpace(Graph):
                 self._set_op_indice(self.edges[i - j, i], 1)  # set all zero
             d = op_indices[20 + index]
             self._set_op_indice(self.edges[i - d, i], 0)  # set one to identity
+        self.set_run_stats = False
 
     def get_op_indices(self):
         op_indices = []
@@ -262,6 +265,7 @@ class OnceForAllSearchSpace(Graph):
         return op_indices
 
     def sample_random_architecture(self, dataset_api=None):
+        self.set_run_stats = False
         # get random op_indices
         op_indices = np.concatenate((np.random.randint(9, size=20), np.random.randint(1, 4, size=5)))
         # set op indices
@@ -312,6 +316,7 @@ class OnceForAllSearchSpace(Graph):
         classifier_dict = OrderedDict((k.replace("classifier.", ""), init[k]) for k in keys
                                       if "classifier." in k)
         final_unit.set_weights(final_expand_dict, feature_mix_dict, classifier_dict)
+        self.set_run_stats = True
 
     def _state_dict(self):
         ord_dict = OrderedDict()
@@ -368,11 +373,14 @@ class OnceForAllSearchSpace(Graph):
 
     @torch.no_grad()
     def evaluate(self, dataset_api=None, metric=None):
+        if not self.set_run_stats:
+            data_loader = dataset_api["dataloader_test"]
+            set_running_statistics(self, data_loader, self.device)
+            self.set_run_stats = True
         if metric == Metric.VAL_ACCURACY:
             data_loader = dataset_api["dataloader_val"]
         elif metric == Metric.TEST_ACCURACY:
             data_loader = dataset_api["dataloader_test"]
-        set_running_statistics(self, data_loader, self.device)
         self.eval()
         self.to(self.device)
         total = len(data_loader.dataset)
