@@ -1,7 +1,7 @@
 %%bash
 optimizers=(bananas re rs)
 predictors=(mlp lgb xgb rf bayes_lin_reg gp none)
-constraints=(latency parameter)
+constraints=(latency parameters)
 # here the max size of our net is 29.239MB and min size 13.011MB: These are 3 quartiles
 parameters_constraint=(17.068038940429688 21.12493896484375 25.181838989257812)
 # TODO
@@ -29,7 +29,7 @@ do
       predictor=${predictors[$j]}
       constraint=${constraints[$k]}
       out_dir=docs/$optimizer\_run
-      if [ $constraint = parameter ]
+      if [ $constraint = parameters ]
         then
           efficiency=${parameters_constraint[*]}
         else
