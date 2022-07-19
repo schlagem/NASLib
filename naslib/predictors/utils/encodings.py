@@ -359,7 +359,10 @@ def encode_tb101(arch, encoding_type='adjacency_one_hot'):
 
 def encode_ofa(arch, encoding_type='adjacency_one_hot'):
     if encoding_type == "adjacency_one_hot":
-        return encode_adjacency_one_hot_ofa(arch)
+        return arch.encode()  # hacky way of setting encoding need to see if it works
+        # return encode_adjacency_one_hot_ofa(arch)
+    if encoding_type == "spec_2_feat":
+        return arch.encode()
     else:
         logger.info(
             "{} is not yet supported as a predictor encoding".format(encoding_type)

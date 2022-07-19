@@ -475,6 +475,13 @@ class OnceForAllSearchSpace(Graph):
             out += ''.join(str(s) for s in part)
         return out
 
+    def encode(self):
+        d, k, e = self.get_active_config()
+        r = 224
+        enc = spec2feats(k, e, d, r)
+        return enc
+
+
     def get_model_size(self):
         """
         Returns model size in mb
