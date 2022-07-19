@@ -153,61 +153,82 @@ class RegularizedEvolution(MetaOptimizer):
 
 
 class RE(RegularizedEvolution):
+
     def __init__(self, config):
         super().__init__(config)
-        self.num_ensemble = config.search.num_ensemble
-        self.predictor_type = config.search.predictor_type
-        self.acq_fn_type = config.search.acq_fn_type
-        self.acq_fn_optimization = config.search.acq_fn_optimization
-
         self.train_data = []
-        self.acq_fn = None
+        self.predictor = Ensemble(
+            num_ensemble=self.config.search.num_ensemble,
+            ss_type=self.ss_type,
+            predictor_type=config.search.predictor_type,
+            config=self.config,
+        )
 
     def new_epoch(self, epoch):
+        # This is the main method that you have to override in order to add the performance predictors
+        # We sample as many architectures as we need
+        print(epoch)
         if epoch < self.population_size:
-            model = torch.nn.Module()
+            logger.info("Start sampling architectures to fill the population")
+            # If there is no scope defined, let's use the search space default one
+
+            model = (
+                torch.nn.Module()
+            )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.search_space.clone()
             if self.constraint:
                 self.get_valid_arch_under_constraint(model)
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
-            model.accuracy = model.arch.query(self.performance_metric,
-                                              self.dataset,
-                                              dataset_api=self.dataset_api)
-            self.population.append(model)
-            self.train_data.append(model)
-            self._update_history(model)
+            model.accuracy = model.arch.query(
+                self.performance_metric, self.dataset, dataset_api=self.dataset_api
+            )
 
-        # CREATE AND TRAIN PERFORMANCE PREDICTOR
+            self.train_data.append(model)
+            self.population.append(model)
+            self._update_history(model)
         else:
-            if epoch % 10 == 0:
+            if epoch - self.population_size == 0:
+                # we fit first time after population is filled
+                # query whole population and fit predictor
                 xtrain = [m.arch for m in self.train_data]
-                ytrain = [m.arch.query(Metric.TEST_ACCURACY, dataset_api=self.dataset_api) for m in self.train_data]
-                ensemble = Ensemble(num_ensemble=self.num_ensemble,
-                                    ss_type=self.ss_type,
-                                    predictor_type=self.predictor_type,
-                                    config=self.config)
-                ensemble.fit(xtrain, ytrain)
-                self.acq_fn = acquisition_function(ensemble=ensemble,
-                                                   ytrain=ytrain,
-                                                   acq_fn_type=self.acq_fn_type)
+                ytrain = [m.accuracy for m in self.train_data]
+
+                # train_error not needed here
+                train_error = self.predictor.fit(xtrain, ytrain)
 
             sample = []
             while len(sample) < self.sample_size:
                 candidate = np.random.choice(list(self.population))
                 sample.append(candidate)
 
-            child = torch.nn.Module()
+            parent = max(sample, key=lambda x: x.accuracy)
+
+            child = (
+                torch.nn.Module()
+            )  # hacky way to get arch and accuracy checkpointable
             child.arch = self.search_space.clone()
+
             if self.constraint:
-                self.get_valid_arch_under_constraint(child)
+                self.get_valid_arch_under_constraint(child, parent=parent)
             else:
-                child.arch.sample_random_architecture(dataset_api=self.dataset_api)
-            child.accuracy = child.arch.query(self.performance_metric,
-                                              self.dataset,
-                                              dataset_api=self.dataset_api)
+                child.arch.mutate(parent.arch, dataset_api=self.dataset_api)
+
+            if epoch - self.population_size != 0 and (epoch - self.population_size) % 10 == 0:
+                child.accuracy = child.arch.query(
+                    self.performance_metric, self.dataset, dataset_api=self.dataset_api
+                )
+                self.train_data.append(child)
+
+                xtrain = [m.arch for m in self.train_data]
+                ytrain = [m.accuracy for m in self.train_data]
+
+                # train_error not needed here
+                train_error = self.predictor.fit(xtrain, ytrain)
+            else:
+                child.accuracy = np.mean(self.predictor.query([child.arch]))
+
             self.population.append(child)
-            self.train_data.append(child)
             self._update_history(child)
 
     def adapt_search_space(self, search_space, scope=None, dataset_api=None):
@@ -218,3 +239,6 @@ class RE(RegularizedEvolution):
         self.ss_type = 'ofa'
         self.scope = scope if scope else search_space.OPTIMIZER_SCOPE
         self.dataset_api = dataset_api
+
+    def get_op_optimizer(self):
+        raise NotImplementedError()
