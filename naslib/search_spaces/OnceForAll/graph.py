@@ -8,7 +8,7 @@ from naslib.utils.utils import load_config
 
 # Once-For-All imports
 from ofa.utils import download_url, make_divisible, MyNetwork
-from naslib.search_spaces.OnceForAll.ofa_utils import spec2feats
+from naslib.search_spaces.OnceForAll.ofa_utils import spec2feats, set_running_statistics
 
 # other imports
 from collections import OrderedDict
@@ -17,7 +17,6 @@ import numpy as np
 import torch
 from torch.nn.parameter import Parameter
 from typing import Iterator
-from ofa_utils import set_running_statistics
 
 
 class OnceForAllSearchSpace(Graph):

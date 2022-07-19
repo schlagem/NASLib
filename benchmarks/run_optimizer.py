@@ -37,8 +37,8 @@ def run_optimizer(config_file, nas_optimizer):
 
 
 if __name__ == "__main__":
-    optim = Bananas
-    path = 'docs/bananas_run/imagenet/configs/nas_predictors'
+    optim = RS
+    path = 'docs/rs_run/imagenet/configs/nas_predictors'
     list_of_config_files = [f for f in listdir(path) if isfile(join(path, f))]
 
     for file in sorted(list_of_config_files):
