@@ -3,8 +3,8 @@ from naslib.utils.utils import get_project_root
 from naslib.search_spaces.core.query_metrics import Metric
 import os
 import pprint
-from ofa_utils import OFADatasetAPI
-from graph import OnceForAllSearchSpace
+from naslib.search_spaces.OnceForAll.ofa_utils import OFADatasetAPI
+from naslib.search_spaces.OnceForAll.graph import OnceForAllSearchSpace
 from naslib.predictors.utils import encodings
 import time
 

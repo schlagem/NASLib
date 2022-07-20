@@ -24,7 +24,8 @@ def run_optimizer(config_file, nas_optimizer):
     search_space = OFA()
     search_space.set_weights()
 
-    efficiency_predictor = EfficiencyTable(config.search.constraint) if config.search.constraint else None
+    efficiency_predictor = EfficiencyTable(pred_type=config.search.constraint, load_efficiency_table=True)\
+        if config.search.constraint else None
     optimizer = nas_optimizer(config, efficiency_predictor)
     dataset_api = get_dataset_api(config.search_space, config.dataset)
     optimizer.adapt_search_space(search_space, None, dataset_api)

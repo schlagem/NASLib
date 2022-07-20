@@ -1,5 +1,5 @@
-from graph import OnceForAllSearchSpace
-from ofa_utils import OFADatasetAPI
+from naslib.search_spaces.OnceForAll.graph import OnceForAllSearchSpace
+from naslib.search_spaces.OnceForAll.ofa_utils import OFADatasetAPI
 import time
 from naslib.search_spaces.core.query_metrics import Metric
 

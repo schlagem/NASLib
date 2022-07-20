@@ -11,7 +11,7 @@ search:
   cutout_length: 16
   cutout_prob: 1.0
   data_size: 25000
-  efficiency: 50.0
+  efficiency: 43.663020133930004
   encoding_type: adjacency_one_hot
   epochs: 300
   fidelity: 200

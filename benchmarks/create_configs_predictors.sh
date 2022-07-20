@@ -4,8 +4,8 @@ predictors=(mlp lgb xgb rf bayes_lin_reg gp none)
 constraints=(latency parameters)
 # here the max size of our net is 29.239MB and min size 13.011MB: These are 3 quartiles
 parameters_constraint=(17.068038940429688 21.12493896484375 25.181838989257812)
-# TODO
-latency_constraint=(25 50 75)
+# for NVIDIA Tesla K80 and bs=8/r=224, min/max latency: 12.839/74.486ms
+latency_constraint=(28.251354694345 43.663020133930004 59.074685573515005)
 
 start_seed=0
 

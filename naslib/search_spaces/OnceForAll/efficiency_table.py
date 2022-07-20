@@ -30,9 +30,11 @@ class EfficiencyTable:
         self.device = device
         self.batch_size = batch_size
         self.efficiency_dict = {}
-        if load_efficiency_table is not None:
+        # if load_efficiency_table is not None:
+        if load_efficiency_table:
+            path = f"efficiency_luts/{pred_type}.npy"
             self.efficiency_dict = np.load(
-                load_efficiency_table, allow_pickle=True
+                path, allow_pickle=True
             ).item()
         else:
             self.build_lut(batch_size)
