@@ -11,9 +11,10 @@ from naslib.utils import utils, setup_logger, get_dataset_api
 
 def run_optimizer(config_file, nas_optimizer):
     config = utils.load_config(config_file)
+    quartile = config_file[-6:-5]
+    constraint = config.search.constraint if config.search.constraint else 'none'
     config.save = "{}/{}/{}/{}/{}/{}".format(
-        config.out_dir, config.dataset, "nas_predictor", config.search_space, config.search.predictor_type,
-        config.search.seed,
+        config.out_dir, config.dataset, "runs", config.search.predictor_type, constraint, quartile,
     )
     utils.set_seed(config.search.seed)
     utils.log_args(config)

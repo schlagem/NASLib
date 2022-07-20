@@ -6,6 +6,8 @@ import copy
 import torch
 import torch.nn as nn
 import numpy as np
+import os
+from naslib.utils.utils import get_project_root
 from ofa.utils.layers import *
 
 
@@ -32,7 +34,8 @@ class EfficiencyTable:
         self.efficiency_dict = {}
         # if load_efficiency_table is not None:
         if load_efficiency_table:
-            path = f"efficiency_luts/{pred_type}.npy"
+            root = get_project_root()
+            path = os.path.join(root, f"data/efficiency_luts/{pred_type}.npy")
             self.efficiency_dict = np.load(
                 path, allow_pickle=True
             ).item()
