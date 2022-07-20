@@ -230,7 +230,7 @@ class OFADatasetAPI(object):
                 transform=build_val_transform(224)
             ),
             batch_size=250,  # test batch size
-            num_workers=4,  # number of workers for the data loader
+            num_workers=1,  # number of workers for the data loader
             pin_memory=True,
         )
         self.items["dataloader_test"] = data_loader
@@ -253,7 +253,7 @@ class OFADatasetAPI(object):
                 transform=build_val_transform(224)
             ),
             batch_size=250,  # test batch size
-            num_workers=4,  # number of workers for the data loader
+            num_workers=1,  # number of workers for the data loader
             pin_memory=True,
         )
         self.items["dataloader_val"] = data_loader

@@ -1,6 +1,6 @@
-"""
-Copied from https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial/flops_table.py
-"""
+"""EfficiencyTable: Copied and adapted from https://github.com/mit-han-lab/once-for-all/blob/master/ofa/tutorial
+/flops_table.py """
+import argparse
 import time
 import copy
 import torch
@@ -505,5 +505,24 @@ class EfficiencyTable:
 
 
 if __name__ == "__main__":
-    a = EfficiencyTable('flops')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--type", type=str, default='latency', help="efficiency type")
+    parser.add_argument("--device", type=str, default='cuda', help="device: cpu or cuda")
+    parser.add_argument("--bs", type=int, default=64, help="batch size")
+    parser.add_argument("--multiplier", type=int, default=1, help="multiplier")
+    args = parser.parse_args()
 
+    table = EfficiencyTable(args.type, args.device, args.multiplier, args.bs)
+    # max sample
+    sample = {
+        "ks": [7] * 20,
+        "e": [6] * 20,
+        "d": [4] * 5
+    }
+    print(table.predict_efficiency(sample))
+    sample = {
+        "ks": [3] * 20,
+        "e": [3] * 20,
+        "d": [2] * 5
+    }
+    print(table.predict_efficiency(sample))

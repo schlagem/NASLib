@@ -12,24 +12,24 @@ import time
 # print(ss.encode())
 # print(encodings.encode_adjacency_one_hot_ofa(ss))
 
-# root = get_project_root()
-# path = os.path.join(root, "data", "ofa.pickle")
+root = get_project_root()
+path = os.path.join(root, "data", "ofa.pickle")
+
+data = pickle.load(open(path, 'rb'))
+print(len(data))
+
+# api = OFADatasetAPI()
 #
-# data = pickle.load(open(path, 'rb'))
-# print(len(data))
-
-api = OFADatasetAPI()
-
-ss = OnceForAllSearchSpace()
-ss.set_weights()
-
-print(ss.query(metric=Metric.VAL_ACCURACY, dataset_api=api))
-print(ss.query(metric=Metric.TEST_ACCURACY, dataset_api=api))
-
-ss.sample_random_architecture()
-start = time.time()
-print(ss.query(metric=Metric.VAL_ACCURACY, dataset_api=api))
-print(time.time() - start)
-start = time.time()
-print(ss.query(metric=Metric.TEST_ACCURACY, dataset_api=api))
-print(time.time() - start)
+# ss = OnceForAllSearchSpace()
+# ss.set_weights()
+#
+# print(ss.query(metric=Metric.VAL_ACCURACY, dataset_api=api))
+# print(ss.query(metric=Metric.TEST_ACCURACY, dataset_api=api))
+#
+# ss.sample_random_architecture()
+# start = time.time()
+# print(ss.query(metric=Metric.VAL_ACCURACY, dataset_api=api))
+# print(time.time() - start)
+# start = time.time()
+# print(ss.query(metric=Metric.TEST_ACCURACY, dataset_api=api))
+# print(time.time() - start)
