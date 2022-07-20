@@ -1,4 +1,5 @@
 import logging
+import time
 from os import listdir
 from os.path import isfile, join
 
@@ -10,6 +11,7 @@ from naslib.utils import utils, setup_logger, get_dataset_api
 
 
 def run_optimizer(config_file, nas_optimizer):
+    start = time.time()
     config = utils.load_config(config_file)
     quartile = config_file[-6:-5]
     constraint = config.search.constraint if config.search.constraint else 'none'
@@ -18,9 +20,6 @@ def run_optimizer(config_file, nas_optimizer):
     )
     utils.set_seed(config.search.seed)
     utils.log_args(config)
-
-    logger = setup_logger(config.save + "/log.log")
-    logger.setLevel(logging.INFO)
 
     search_space = OFA()
     search_space.set_weights()
@@ -36,13 +35,18 @@ def run_optimizer(config_file, nas_optimizer):
     trainer.evaluate(dataset_api=dataset_api)
 
     dataset_api.close()
+    logger.info(f"FINISHED RUN: {config.search.predictor_type}/{constraint}/{quartile}"
+                f" in {'%dm %2ds' % (divmod(int(time.time()-start), 60))}")
 
 
 if __name__ == "__main__":
-    optim = RS
+    optimizer = RS
     path = 'docs/rs_run/imagenet/configs/nas_predictors'
     list_of_config_files = [f for f in listdir(path) if isfile(join(path, f))]
 
+    logger = setup_logger('docs/rs_run/imagenet/runs' + "/log.log")
+    logger.setLevel(logging.INFO)
+
     for file in sorted(list_of_config_files):
         config_file_path = join(path, file)
-        run_optimizer(config_file=config_file_path, nas_optimizer=optim)
+        run_optimizer(config_file=config_file_path, nas_optimizer=optimizer)
