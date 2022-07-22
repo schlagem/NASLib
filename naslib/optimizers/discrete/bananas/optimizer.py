@@ -54,6 +54,7 @@ class Bananas(MetaOptimizer):
 
         self.train_data = []
         self.next_batch = []
+        self.next_batch_acc = []  # hacky way to get Bananas like RE and RS
         self.history = torch.nn.ModuleList()
 
         self.zc = "omni" in self.predictor_type
@@ -212,15 +213,16 @@ class Bananas(MetaOptimizer):
                 sorted_indices = np.argsort(values)
                 choices = [candidates[i] for i in sorted_indices[-self.k:]]
                 self.next_batch = [*choices]
-
+                self.next_batch_acc = [values[i] for i in sorted_indices[-self.k:]]
             # train the next architecture chosen by the neural predictor
             model = (
                 torch.nn.Module()
             )  # hacky way to get arch and accuracy checkpointable
             model.arch = self.next_batch.pop()
-            model.accuracy = model.arch.query(
-                self.performance_metric, self.dataset, dataset_api=self.dataset_api
-            )
+            model.accuracy = self.next_batch_acc.pop()
+            # model.accuracy = model.arch.query(
+            #     self.performance_metric, self.dataset, dataset_api=self.dataset_api
+            # )
             if self.zc and len(self.train_data) <= self.max_zerocost:
                 zc_method = self.get_zc_method()
                 zc_method.train_loader = copy.deepcopy(self.train_loader)
