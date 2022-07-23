@@ -388,7 +388,7 @@ class OnceForAllSearchSpace(Graph):
         for images, labels in data_loader:
             images, labels = images.to(self.device), labels.to(self.device)
             output = self(images)
-            _, predicted = torch.max(output.data, 1)
+            _, predicted = torch.max(output.detach(), 1)
             correct += (predicted == labels).sum().item()
         accuracy = correct / total * 100
         self.to()

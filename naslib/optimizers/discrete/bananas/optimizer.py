@@ -214,6 +214,7 @@ class Bananas(MetaOptimizer):
                 choices = [candidates[i] for i in sorted_indices[-self.k:]]
                 self.next_batch = [*choices]
                 self.next_batch_acc = [values[i] for i in sorted_indices[-self.k:]]
+                candidates *= 0
             # train the next architecture chosen by the neural predictor
             model = (
                 torch.nn.Module()
