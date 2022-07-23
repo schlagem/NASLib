@@ -3,6 +3,7 @@ import logging
 import torch
 import copy
 import numpy as np
+import gc
 
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.optimizers.discrete.bananas.acquisition_functions import (
@@ -108,6 +109,7 @@ class Bananas(MetaOptimizer):
 
         else:
             if len(self.next_batch) == 0:
+                gc.collect()
                 # train a neural predictor
                 xtrain = [m.arch for m in self.train_data]
                 ytrain = [m.accuracy for m in self.train_data]

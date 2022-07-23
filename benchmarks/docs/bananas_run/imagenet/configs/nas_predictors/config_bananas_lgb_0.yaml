@@ -18,7 +18,7 @@ search:
   k: 20
   max_mutations: 1
   num_arches_to_mutate: 5
-  num_candidates: 200
+  num_candidates: 100
   num_ensemble: 3
   num_init: 20
   population_size: 30
