@@ -3,7 +3,6 @@ import logging
 import torch
 import copy
 import numpy as np
-import gc
 
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.optimizers.discrete.bananas.acquisition_functions import (
@@ -232,7 +231,6 @@ class Bananas(MetaOptimizer):
 
             self._update_history(model)
             self.train_data.append(model)
-            gc.collect()
 
     def get_valid_arch_under_constraint(self, model):
         while True:
