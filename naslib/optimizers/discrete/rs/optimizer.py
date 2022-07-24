@@ -151,10 +151,11 @@ class RS(RandomSearch):
         )
         # pretrained accuracy predictor from ofa and flag
         self.pretrained_acc_predictor_flag = config.search.pretrained_acc_predictor_flag
-        self.pretrained_acc_predictor = AccuracyPredictor(
-            pretrained=True,
-            device='cuda:0' if torch.cuda.is_available() else 'cpu'
-        )
+        if self.pretrained_acc_predictor_flag:
+            self.pretrained_acc_predictor = AccuracyPredictor(
+                pretrained=True,
+                device='cuda:0' if torch.cuda.is_available() else 'cpu'
+            )
         self.population_size = config.search.population_size
         self.efficiency_predictor = efficiency_predictor
 
@@ -167,8 +168,8 @@ class RS(RandomSearch):
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
             if self.pretrained_acc_predictor_flag:
-                sample = model.arch.get_active_conf_dict()
-                model.accuracy = self.pretrained_acc_predictor.predict_accuracy([sample])
+                ofa_sample = model.arch.get_active_conf_dict()
+                model.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
             else:
                 model.accuracy = model.arch.query(self.performance_metric,
                                                   self.dataset,
@@ -209,8 +210,8 @@ class RS(RandomSearch):
                 # train_error not needed here
                 train_error = self.predictor.fit(xtrain, ytrain)
             elif self.pretrained_acc_predictor_flag:
-                sample = child.arch.get_active_conf_dict()
-                child.accuracy = self.pretrained_acc_predictor.predict_accuracy([sample])
+                ofa_sample = child.arch.get_active_conf_dict()
+                child.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
             else:
                 child.accuracy = np.mean(self.predictor.query([child.arch]))
 

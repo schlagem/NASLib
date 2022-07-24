@@ -166,6 +166,14 @@ class RE(RegularizedEvolution):
             config=self.config,
         )
 
+        # pretrained accuracy predictor from ofa and flag
+        self.pretrained_acc_predictor_flag = config.search.pretrained_acc_predictor_flag
+        if self.pretrained_acc_predictor_flag:
+            self.pretrained_acc_predictor = AccuracyPredictor(
+                pretrained=True,
+                device='cuda:0' if torch.cuda.is_available() else 'cpu'
+            )
+
     def new_epoch(self, epoch):
         # This is the main method that you have to override in order to add the performance predictors
         # We sample as many architectures as we need
@@ -181,15 +189,19 @@ class RE(RegularizedEvolution):
                 self.get_valid_arch_under_constraint(model)
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
-            model.accuracy = model.arch.query(
-                self.performance_metric, self.dataset, dataset_api=self.dataset_api
-            )
+            if self.pretrained_acc_predictor_flag:
+                ofa_sample = model.arch.get_active_conf_dict()
+                model.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
+            else:
+                model.accuracy = model.arch.query(
+                    self.performance_metric, self.dataset, dataset_api=self.dataset_api
+                )
+                self.train_data.append(model)
 
-            self.train_data.append(model)
             self.population.append(model)
             self._update_history(model)
         else:
-            if epoch - self.population_size == 0:
+            if epoch - self.population_size == 0 and not self.pretrained_acc_predictor_flag:
                 # we fit first time after population is filled
                 # query whole population and fit predictor
                 xtrain = [m.arch for m in self.train_data]
@@ -215,7 +227,8 @@ class RE(RegularizedEvolution):
             else:
                 child.arch.mutate(parent.arch, dataset_api=self.dataset_api)
 
-            if epoch - self.population_size != 0 and (epoch - self.population_size) % 10 == 0:
+            if epoch - self.population_size != 0 and (epoch - self.population_size) % 10 == 0\
+                    and not self.pretrained_acc_predictor_flag:
                 child.accuracy = child.arch.query(
                     self.performance_metric, self.dataset, dataset_api=self.dataset_api
                 )
@@ -226,6 +239,9 @@ class RE(RegularizedEvolution):
 
                 # train_error not needed here
                 train_error = self.predictor.fit(xtrain, ytrain)
+            elif self.pretrained_acc_predictor_flag:
+                ofa_sample = child.arch.get_active_conf_dict()
+                child.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
             else:
                 child.accuracy = np.mean(self.predictor.query([child.arch]))
 
