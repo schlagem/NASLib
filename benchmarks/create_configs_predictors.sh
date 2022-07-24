@@ -2,6 +2,7 @@
 optimizers=(bananas re rs)
 predictors=(mlp lgb xgb rf bayes_lin_reg gp)
 constraints=(latency parameters)
+pretrained_acc_predictor_flag=False
 # here the max size of our net is 29.239MB and min size 13.011MB: These are 3 quartiles
 parameters_constraint=(17.068038940429688 21.12493896484375 25.181838989257812)
 # for NVIDIA Tesla K80 and bs=8/r=224, min/max latency: 12.839/74.486ms
@@ -38,7 +39,8 @@ do
       python create_configs.py --predictor $predictor \
       --epochs $search_epochs --start_seed $start_seed --trials $trials \
       --out_dir $out_dir --dataset=$dataset --config_type nas_predictor_constraint \
-      --search_space $search_space --optimizer $optimizer --constraint $constraint --efficiency $efficiency
+      --search_space $search_space --optimizer $optimizer --constraint $constraint --efficiency $efficiency \
+      --pretrained_acc_predictor_flag $pretrained_acc_predictor_flag
     done
   done
 done
@@ -53,6 +55,6 @@ do
     python create_configs.py --predictor $predictor \
     --epochs $search_epochs --start_seed $start_seed --trials $trials \
     --out_dir $out_dir --dataset=$dataset --config_type nas_predictor \
-    --search_space $search_space --optimizer $optimizer
+    --search_space $search_space --optimizer $optimizer --pretrained_acc_predictor_flag $pretrained_acc_predictor_flag
   done
 done
