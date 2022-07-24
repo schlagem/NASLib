@@ -40,13 +40,14 @@ def run_optimizer(config_file, nas_optimizer):
 
 
 if __name__ == "__main__":
-    optimizer = Bananas
-    path = 'docs/bananas_run/imagenet/configs/nas_predictors'
+    optimizer = RS
+    path = 'docs/rs_run/imagenet/configs/nas_predictors'
     list_of_config_files = [f for f in listdir(path) if isfile(join(path, f))]
 
-    logger = setup_logger('docs/bananas_run/imagenet/runs' + "/log.log")
+    logger = setup_logger('docs/rs_run/imagenet/runs' + "/log.log")
     logger.setLevel(logging.INFO)
 
     for file in sorted(list_of_config_files):
         config_file_path = join(path, file)
         run_optimizer(config_file=config_file_path, nas_optimizer=optimizer)
+

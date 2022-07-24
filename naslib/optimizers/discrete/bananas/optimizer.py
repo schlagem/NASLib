@@ -216,7 +216,7 @@ class Bananas(MetaOptimizer):
                     ]
                 else:
                     if self.pretrained_predictor:
-                        values = [acq_fn.predict_accuracy([encoding.get_active_conf_dict()]) for encoding in candidates]
+                        values = [acq_fn.predict_accuracy([encoding.get_active_conf_dict()]).item() * 100 for encoding in candidates]
                     else:
                         values = [acq_fn(encoding) for encoding in candidates]
                 sorted_indices = np.argsort(values)
