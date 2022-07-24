@@ -18243,3 +18243,101 @@ train_portion: 0.7
 Graph ofa-0.8444219, scope None, 32 nodes
 [07/22 17:44:17] nl.defaults.trainer INFO: Queried results (Metric.TEST_ACCURACY): 77.2
 [07/22 17:44:17] naslib INFO: FINISHED RUN: xgb/parameters/3 in 23m  8s
+[07/24 17:36:42] nl.utils.utils INFO: dataset...................................imagenet
+[07/24 17:36:42] nl.utils.utils INFO: optimizer.......................................re
+[07/24 17:36:42] nl.utils.utils INFO: out_dir................................docs/re_run
+[07/24 17:36:42] nl.utils.utils INFO: searchacq_fn_optimization: random_sampling
+acq_fn_type: its
+batch_size: 256
+checkpoint_freq: 5000
+constraint: 
+cutout: False
+cutout_length: 16
+cutout_prob: 1.0
+data_size: 25000
+efficiency: 0
+encoding_type: adjacency_one_hot
+epochs: 300
+fidelity: 200
+k: 20
+max_mutations: 1
+num_arches_to_mutate: 5
+num_candidates: 100
+num_ensemble: 3
+num_init: 20
+population_size: 30
+predictor_type: pretrained
+sample_size: 10
+seed: 0
+train_portion: 0.7
+[07/24 17:36:42] nl.utils.utils INFO: search_space...................................ofa
+[07/24 17:36:42] nl.utils.utils INFO: seed.............................................0
+[07/24 17:36:42] nl.utils.utils INFO: save...docs/re_run/imagenet/runs/pretrained/none/0
+[07/24 17:36:43] nl.defaults.trainer INFO: param size = 0.000000MB
+[07/24 17:36:43] nl.defaults.trainer INFO: Start training
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 0, Anytime results: -1
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 0 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 1 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 2 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 3 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 4 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 5 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 6 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:43] nl.defaults.trainer INFO: Epoch 7 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:36:43] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 8 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 9 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 10 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 11 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 12 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 13 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 14 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 15 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 16 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 17 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 18 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 19 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 20 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 21 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 22 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 23 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 24 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 25 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 26 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 27 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 28 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:44] nl.optimizers.discrete.re.optimizer INFO: Start sampling architectures to fill the population
+[07/24 17:36:44] nl.defaults.trainer INFO: Epoch 29 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:36:46] nl.search_spaces.core.graph WARNING: Comb_op is ignored if subgraph is defined!
+[07/24 17:37:27] nl.defaults.trainer INFO: Epoch 30, Anytime results: -1
+[07/24 17:37:27] nl.defaults.trainer INFO: Epoch 30 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:38:04] nl.defaults.trainer INFO: Epoch 31, Anytime results: -1
+[07/24 17:38:04] nl.defaults.trainer INFO: Epoch 31 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.09000, 0.00000

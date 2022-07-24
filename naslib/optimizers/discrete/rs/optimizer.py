@@ -7,7 +7,6 @@ from naslib.predictors.ensemble import Ensemble
 from naslib.optimizers.core.metaclasses import MetaOptimizer
 from naslib.search_spaces.core.query_metrics import Metric
 from naslib.utils import measure_net_latency
-from ofa.tutorial import AccuracyPredictor
 
 
 class RandomSearch(MetaOptimizer):
@@ -143,19 +142,13 @@ class RS(RandomSearch):
         self.config = config
         self.train_data = []
         self.ss_type = 'ofa'
+        self.pretrained_predictor = (config.search.predictor_type == 'pretrained')
         self.predictor = Ensemble(
             num_ensemble=self.config.search.num_ensemble,
             ss_type=self.ss_type,
             predictor_type=config.search.predictor_type,
             config=self.config,
         )
-        # pretrained accuracy predictor from ofa and flag
-        self.pretrained_acc_predictor_flag = config.search.pretrained_acc_predictor_flag
-        if self.pretrained_acc_predictor_flag:
-            self.pretrained_acc_predictor = AccuracyPredictor(
-                pretrained=True,
-                device='cuda:0' if torch.cuda.is_available() else 'cpu'
-            )
         self.population_size = config.search.population_size
         self.efficiency_predictor = efficiency_predictor
 
@@ -167,21 +160,17 @@ class RS(RandomSearch):
                 self.get_valid_arch_under_constraint(model)
             else:
                 model.arch.sample_random_architecture(dataset_api=self.dataset_api)
-            if self.pretrained_acc_predictor_flag:
-                ofa_sample = model.arch.get_active_conf_dict()
-                model.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
-            else:
-                model.accuracy = model.arch.query(self.performance_metric,
-                                                  self.dataset,
-                                                  dataset_api=self.dataset_api)
-                self.train_data.append(model)
+            model.accuracy = model.arch.query(self.performance_metric,
+                                              self.dataset,
+                                              dataset_api=self.dataset_api)
 
+            self.train_data.append(model)
             self.sampled_archs.append(model)
             self._update_history(model)
 
         # CREATE AND TRAIN PERFORMANCE PREDICTOR
         else:
-            if epoch - self.population_size == 0 and not self.pretrained_acc_predictor_flag:
+            if epoch - self.population_size == 0 and not self.pretrained_predictor:
                 # we fit first time after population is filled
                 # query whole population and fit predictor
                 xtrain = [m.arch for m in self.train_data]
@@ -197,8 +186,12 @@ class RS(RandomSearch):
             else:
                 child.arch.sample_random_architecture(dataset_api=self.dataset_api)
 
-            if epoch - self.population_size != 0 and (epoch - self.population_size) % 10 == 0\
-                    and not self.pretrained_acc_predictor_flag:
+            if self.pretrained_predictor:
+                config = child.arch.get_active_conf_dict()
+                child.accuracy = self.predictor.predict_accuracy([config]).item() * 100
+            elif epoch - self.population_size != 0 and\
+                    (epoch - self.population_size) % 10 == 0 and\
+                    not self.pretrained_predictor:
                 child.accuracy = child.arch.query(
                     self.performance_metric, self.dataset, dataset_api=self.dataset_api
                 )
@@ -209,9 +202,6 @@ class RS(RandomSearch):
 
                 # train_error not needed here
                 train_error = self.predictor.fit(xtrain, ytrain)
-            elif self.pretrained_acc_predictor_flag:
-                ofa_sample = child.arch.get_active_conf_dict()
-                child.accuracy = self.pretrained_acc_predictor.predict_accuracy([ofa_sample])
             else:
                 child.accuracy = np.mean(self.predictor.query([child.arch]))
 
@@ -225,6 +215,8 @@ class RS(RandomSearch):
         self.search_space = search_space.clone()
         self.scope = scope if scope else search_space.OPTIMIZER_SCOPE
         self.dataset_api = dataset_api
+        if self.pretrained_predictor:
+            self.predictor = self.dataset_api["accuracy_predictor"]
 
     def get_valid_arch_under_constraint(self, model):
         while True:

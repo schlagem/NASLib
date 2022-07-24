@@ -198,7 +198,6 @@ def main(args):
                            'cutout_prob': 1.0,
                            'train_portion': 0.7,
                            'constraint': args.constraint,
-                           'pretrained_acc_predictor_flag': args.pretrained_acc_predictor_flag,
                            'efficiency': args.efficiency[i],
                            'seed': args.start_seed,
                            }
@@ -232,7 +231,6 @@ if __name__ == "__main__":
     parser.add_argument("--search_space", type=str, default='nasbench201', help="nasbench201 or darts?")
     parser.add_argument("--experiment_type", type=str, default='single', help="type of experiment")
     parser.add_argument("--constraint", type=str, default='', help="type of constraint")
-    parser.add_argument("--pretrained_acc_predictor_flag", type=bool, default=False, help="use pretrained accuracy predictor")
     parser.add_argument("--efficiency", type=float, nargs='*', default=0, help="size of constraint")
 
     args = parser.parse_args()

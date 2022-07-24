@@ -15633,3 +15633,333 @@ train_portion: 0.7
 Graph ofa-0.8444219, scope None, 32 nodes
 [07/21 00:08:14] nl.defaults.trainer INFO: Queried results (Metric.TEST_ACCURACY): 74.9
 [07/21 00:08:14] naslib INFO: FINISHED RUN: xgb/parameters/3 in 0m 49s
+[07/24 17:28:26] nl.utils.utils INFO: dataset...................................imagenet
+[07/24 17:28:26] nl.utils.utils INFO: optimizer.......................................rs
+[07/24 17:28:26] nl.utils.utils INFO: out_dir................................docs/rs_run
+[07/24 17:28:26] nl.utils.utils INFO: searchacq_fn_optimization: random_sampling
+acq_fn_type: its
+batch_size: 256
+checkpoint_freq: 5000
+constraint: 
+cutout: False
+cutout_length: 16
+cutout_prob: 1.0
+data_size: 25000
+efficiency: 0
+encoding_type: adjacency_one_hot
+epochs: 300
+fidelity: 200
+k: 20
+max_mutations: 1
+num_arches_to_mutate: 5
+num_candidates: 100
+num_ensemble: 3
+num_init: 20
+population_size: 30
+predictor_type: pretrained
+sample_size: 10
+seed: 0
+train_portion: 0.7
+[07/24 17:28:26] nl.utils.utils INFO: search_space...................................ofa
+[07/24 17:28:26] nl.utils.utils INFO: seed.............................................0
+[07/24 17:28:26] nl.utils.utils INFO: save...docs/rs_run/imagenet/runs/pretrained/none/0
+[07/24 17:31:44] nl.utils.utils INFO: dataset...................................imagenet
+[07/24 17:31:44] nl.utils.utils INFO: optimizer.......................................rs
+[07/24 17:31:44] nl.utils.utils INFO: out_dir................................docs/rs_run
+[07/24 17:31:44] nl.utils.utils INFO: searchacq_fn_optimization: random_sampling
+acq_fn_type: its
+batch_size: 256
+checkpoint_freq: 5000
+constraint: 
+cutout: False
+cutout_length: 16
+cutout_prob: 1.0
+data_size: 25000
+efficiency: 0
+encoding_type: adjacency_one_hot
+epochs: 300
+fidelity: 200
+k: 20
+max_mutations: 1
+num_arches_to_mutate: 5
+num_candidates: 100
+num_ensemble: 3
+num_init: 20
+population_size: 30
+predictor_type: pretrained
+sample_size: 10
+seed: 0
+train_portion: 0.7
+[07/24 17:31:44] nl.utils.utils INFO: search_space...................................ofa
+[07/24 17:31:44] nl.utils.utils INFO: seed.............................................0
+[07/24 17:31:44] nl.utils.utils INFO: save...docs/rs_run/imagenet/runs/pretrained/none/0
+[07/24 17:31:45] nl.defaults.trainer INFO: param size = 0.000000MB
+[07/24 17:31:45] nl.defaults.trainer INFO: Start training
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 0, Anytime results: -1
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 0 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 1 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 2 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 3 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 4 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 5 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 6 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:45] nl.defaults.trainer INFO: Epoch 7 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 8 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 9 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 10 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 11 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 12 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 13 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 14 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 15 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 16 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 17 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 18 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 19 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 20 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 21 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 22 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 23 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 24 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 25 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 26 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 27 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 28 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:46] nl.defaults.trainer INFO: Epoch 29 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 30 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 31 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 32 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 33 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 34 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 35 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 36 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 37 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 38 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 39 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 40 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 41 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 42 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 43 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 44 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 45 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 46 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 47 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 48 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 49 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 50 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:48] nl.defaults.trainer INFO: Epoch 51 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 52 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 53 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 54 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 55 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 56 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 57 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 58 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 59 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 60 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 61 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 62 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 63 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 64 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 65 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 66 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 67 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 68 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 69 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 70 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:49] nl.defaults.trainer INFO: Epoch 71 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:31:51] nl.search_spaces.core.graph WARNING: Comb_op is ignored if subgraph is defined!
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 72, Anytime results: -1
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 72 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 73 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 74 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 75 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 76 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 77 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 78 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 79 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 80 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 81 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 82 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 83 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 84 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 85 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 86 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 87 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:57] nl.defaults.trainer INFO: Epoch 88 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 89 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 90 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 91 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 92 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 93 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 94 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 95 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 96 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 97 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 98 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 99 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 100 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 101 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.07000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 102 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 103 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 104 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 105 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 106 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 107 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 108 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:58] nl.defaults.trainer INFO: Epoch 109 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 110 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 111 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 112 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 113 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 114 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 115 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 116 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 117 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 118 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 119 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 120 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 121 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 122 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 123 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 124 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 125 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 126 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 127 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 128 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:31:59] nl.defaults.trainer INFO: Epoch 129 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 130 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 131 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 132 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 133 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 134 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 135 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 136 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 137 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 138 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 139 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 140 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 141 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 142 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 143 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 144 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 145 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 146 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 147 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 148 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 149 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 150 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 151 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:00] nl.defaults.trainer INFO: Epoch 152 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 153 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 154 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 155 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 156 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 157 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:32:01] nl.defaults.trainer INFO: Epoch 158 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.10000, 0.00000
+[07/24 17:34:26] nl.utils.utils INFO: dataset...................................imagenet
+[07/24 17:34:26] nl.utils.utils INFO: optimizer.......................................rs
+[07/24 17:34:26] nl.utils.utils INFO: out_dir................................docs/rs_run
+[07/24 17:34:26] nl.utils.utils INFO: searchacq_fn_optimization: random_sampling
+acq_fn_type: its
+batch_size: 256
+checkpoint_freq: 5000
+constraint: 
+cutout: False
+cutout_length: 16
+cutout_prob: 1.0
+data_size: 25000
+efficiency: 0
+encoding_type: adjacency_one_hot
+epochs: 300
+fidelity: 200
+k: 20
+max_mutations: 1
+num_arches_to_mutate: 5
+num_candidates: 100
+num_ensemble: 3
+num_init: 20
+population_size: 30
+predictor_type: pretrained
+sample_size: 10
+seed: 0
+train_portion: 0.7
+[07/24 17:34:26] nl.utils.utils INFO: search_space...................................ofa
+[07/24 17:34:26] nl.utils.utils INFO: seed.............................................0
+[07/24 17:34:26] nl.utils.utils INFO: save...docs/rs_run/imagenet/runs/pretrained/none/0
+[07/24 17:34:27] nl.defaults.trainer INFO: param size = 0.000000MB
+[07/24 17:34:27] nl.defaults.trainer INFO: Start training
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 0, Anytime results: -1
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 0 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 1 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 2 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 3 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:27] nl.defaults.trainer INFO: Epoch 4 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 5 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 6 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 7 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.05000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 8 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 9 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 10 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 11 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 12 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 13 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 14 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 15 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 16 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 17 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 18 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 19 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 20 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 21 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 22 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 23 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 24 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 25 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:28] nl.defaults.trainer INFO: Epoch 26 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 27 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 28 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 29 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.08000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 30 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 31 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 32 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 33 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 34 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 35 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 36 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 37 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:29] nl.defaults.trainer INFO: Epoch 38 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 39 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 40 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 41 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 42 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 43 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 44 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 45 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 46 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 47 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 48 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 49 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 50 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 51 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 52 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 53 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 54 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 55 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 56 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 57 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 58 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 59 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 60 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 61 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:30] nl.defaults.trainer INFO: Epoch 62 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 63 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 64 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 65 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 66 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 67 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 68 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 69 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 70 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:31] nl.defaults.trainer INFO: Epoch 71 done. Train accuracy (top1, top5): -1.00000, 0.00000, Validation accuracy: 75.03000, 0.00000
+[07/24 17:34:32] nl.search_spaces.core.graph WARNING: Comb_op is ignored if subgraph is defined!

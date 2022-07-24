@@ -51,6 +51,7 @@ class Bananas(MetaOptimizer):
         self.constraint = config.search.constraint
         self.efficiency = config.search.efficiency
         self.efficiency_predictor = efficiency_predictor
+        self.pretrained_predictor = (config.search.predictor_type == 'pretrained')
 
         self.train_data = []
         self.next_batch = []
@@ -107,16 +108,18 @@ class Bananas(MetaOptimizer):
             self._update_history(model)
 
         else:
+
             if len(self.next_batch) == 0:
                 # train a neural predictor
                 xtrain = [m.arch for m in self.train_data]
                 ytrain = [m.accuracy for m in self.train_data]
-                ensemble = Ensemble(
-                    num_ensemble=self.num_ensemble,
-                    ss_type=self.ss_type,
-                    predictor_type=self.predictor_type,
-                    config=self.config,
-                )
+                if not self.pretrained_predictor:
+                    ensemble = Ensemble(
+                        num_ensemble=self.num_ensemble,
+                        ss_type=self.ss_type,
+                        predictor_type=self.predictor_type,
+                        config=self.config,
+                    )
 
                 if self.zc and len(self.train_data) <= self.max_zerocost:
                     # pass the zero-cost scores to the predictor
@@ -149,12 +152,15 @@ class Bananas(MetaOptimizer):
                         "jacov_scores": [m.zc_score for m in self.unlabeled]
                     }
                     ensemble.set_pre_computations(unlabeled_zc_info=unlabeled_zc_info)
-                train_error = ensemble.fit(xtrain, ytrain)
 
                 # define an acquisition function
-                acq_fn = acquisition_function(
-                    ensemble=ensemble, ytrain=ytrain, acq_fn_type=self.acq_fn_type
-                )
+                if self.pretrained_predictor:
+                    acq_fn = self.dataset_api["accuracy_predictor"]
+                else:
+                    ensemble.fit(xtrain, ytrain)
+                    acq_fn = acquisition_function(
+                        ensemble=ensemble, ytrain=ytrain, acq_fn_type=self.acq_fn_type
+                    )
 
                 # optimize the acquisition function to output k new architectures
                 candidates = []
@@ -209,7 +215,10 @@ class Bananas(MetaOptimizer):
                         for enc, score in zip(candidates, zc_scores)
                     ]
                 else:
-                    values = [acq_fn(encoding) for encoding in candidates]
+                    if self.pretrained_predictor:
+                        values = [acq_fn.predict_accuracy([encoding.get_active_conf_dict()]) for encoding in candidates]
+                    else:
+                        values = [acq_fn(encoding) for encoding in candidates]
                 sorted_indices = np.argsort(values)
                 choices = [candidates[i] for i in sorted_indices[-self.k:]]
                 self.next_batch = [*choices]
