@@ -23,6 +23,7 @@ search:
   num_init: 20
   population_size: 30
   predictor_type: mlp
+  pretrained_acc_predictor_flag: true
   sample_size: 10
   seed: 0
   train_portion: 0.7
