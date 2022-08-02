@@ -121,7 +121,7 @@ def set_running_statistics(search_space, data_loader, device):
 
 
 def spec2feats(ks_list, ex_list, d_list, r):
-    # This function converts a network config to a feature vector (128-D).
+    """This function converts a network config to a feature vector (128-D). One-hot-encoding."""
     start = 0
     end = 4
     for d in d_list:
@@ -148,6 +148,8 @@ def spec2feats(ks_list, ex_list, d_list, r):
 
 
 class AccuracyPredictor:
+    """The pretrained Accuracy predictor from the original OFA implementation.
+    """
     def __init__(self, pretrained=True):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -202,6 +204,9 @@ def build_val_transform(size):
 
 
 class OFADatasetAPI(object):
+    """This API serves as a provider of the different datasets, the queryable accuracy table and the pretrained
+    accuracy predictor.
+    """
     def __init__(self, dataset_path=None, data_path=None):
         if dataset_path:
             self.datasets_path = dataset_path
@@ -235,16 +240,6 @@ class OFADatasetAPI(object):
         )
         self.items["dataloader_test"] = data_loader
 
-    def get_ofa_pickle(self):
-        self.data_path = os.path.join(get_project_root(), "data", "ofa.pickle")
-        if os.path.exists(self.data_path):
-            with open(self.data_path, "rb") as f:
-                data = pickle.load(f)
-            f.close()
-        else:
-            data = {}
-        self.items['lut'] = data
-
     def get_imagenet10k_subset(self):
         path = os.path.join(self.datasets_path, "imagenet10k", "val")
         data_loader = DataLoader(
@@ -258,7 +253,18 @@ class OFADatasetAPI(object):
         )
         self.items["dataloader_val"] = data_loader
 
+    def get_ofa_pickle(self):
+        self.data_path = os.path.join(get_project_root(), "data", "ofa.pickle")
+        if os.path.exists(self.data_path):
+            with open(self.data_path, "rb") as f:
+                data = pickle.load(f)
+            f.close()
+        else:
+            data = {}
+        self.items['lut'] = data
+
     def close(self):
+        """Saves the look-up-table."""
         data = self.items['lut']
         with open(self.data_path, "wb") as f:
             pickle.dump(data, f)

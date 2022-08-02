@@ -1,3 +1,7 @@
+"""
+Creates a random subset of the ImageNet validation-set with 10k samples.
+"""
+
 import random
 import os
 import shutil

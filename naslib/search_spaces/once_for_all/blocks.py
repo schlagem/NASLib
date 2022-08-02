@@ -1,11 +1,11 @@
-import numpy as np
-import torch
-from collections import OrderedDict
 import copy
+from collections import OrderedDict
 
 from ofa.imagenet_classification.elastic_nn.modules.dynamic_layers import (
     DynamicMBConvLayer,
 )
+from ofa.utils import set_bn_param
+from ofa.utils import val2list
 from ofa.utils.layers import (
     ConvLayer,
     IdentityLayer,
@@ -13,11 +13,6 @@ from ofa.utils.layers import (
     MBConvLayer,
     ResidualBlock,
 )
-from ofa.imagenet_classification.networks import MobileNetV3
-from ofa.utils import make_divisible, val2list, MyNetwork
-
-from ofa.utils import MyNetwork, make_divisible, MyGlobalAvgPool2d
-from ofa.utils import set_bn_param
 
 from ..core.primitives import AbstractPrimitive
 
@@ -214,7 +209,6 @@ class OFALayer(AbstractPrimitive):
         self.active_expand_ratio = active_expand_ratio
 
     def forward(self, x, edge_data):
-        # TODO this should probably be updated as soon as the operation is update
         self.ofa_conv.mobile_inverted_conv.active_kernel_size = self.active_kernel_size
         self.ofa_conv.mobile_inverted_conv.active_expand_ratio = self.active_expand_ratio
         x = self.ofa_conv.res_block(x)

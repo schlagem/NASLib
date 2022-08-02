@@ -4,7 +4,7 @@ from os import listdir
 from os.path import isfile, join
 
 from naslib.optimizers import Bananas, RE, RS
-from naslib.search_spaces.OnceForAll.efficiency_table import EfficiencyTable
+from naslib.search_spaces.once_for_all.efficiency_table import EfficiencyTable
 from naslib.search_spaces import OnceForAllSearchSpace as OFA
 from naslib.defaults.trainer import Trainer
 from naslib.utils import utils, setup_logger, get_dataset_api

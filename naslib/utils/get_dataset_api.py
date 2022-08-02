@@ -142,7 +142,7 @@ def get_natsbenchsize_api(dataset=None):
 
 
 def get_ofa_api(dataset=None):
-    from naslib.search_spaces.OnceForAll.ofa_utils import OFADatasetAPI
+    from naslib.search_spaces.once_for_all.ofa_utils import OFADatasetAPI
     return OFADatasetAPI()
 
 

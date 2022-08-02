@@ -3,7 +3,7 @@ import logging
 import torch
 import os
 
-from naslib.search_spaces.OnceForAll.graph import *
+from naslib.search_spaces.once_for_all.graph import *
 from naslib.search_spaces.darts.graph import *
 from naslib.optimizers import DARTSOptimizer, GDASOptimizer, DrNASOptimizer
 from naslib.utils import utils, setup_logger
